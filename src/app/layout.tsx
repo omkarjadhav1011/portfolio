@@ -11,6 +11,11 @@ const CommandPalette = dynamic(
   { ssr: false }
 );
 
+const StatusBar = dynamic(
+  () => import("@/components/layout/StatusBar").then((m) => m.StatusBar),
+  { ssr: false }
+);
+
 const BASE_URL = "https://omkarjadhav.vercel.app";
 
 export const metadata: Metadata = {
@@ -42,12 +47,14 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: BASE_URL,
     siteName: `${profile.name}'s Portfolio`,
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: `${profile.name} — Developer Portfolio` }],
   },
   twitter: {
     card: "summary_large_image",
     title: `${profile.name} — Developer Portfolio`,
     description: `${profile.headline}. ${profile.currentStatus}.`,
     creator: `@${profile.handle}`,
+    images: ["/opengraph-image"],
   },
   robots: {
     index: true,
@@ -75,8 +82,9 @@ export default function RootLayout({
       <body className="relative">
         <Navbar />
         <CommandPalette />
-        <main>{children}</main>
+        <main className="pb-7">{children}</main>
         <Footer />
+        <StatusBar />
         <Analytics />
       </body>
     </html>

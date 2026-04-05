@@ -69,6 +69,7 @@ export function useTerminal() {
           "    theme dark|light        — switch theme",
           "    git --version           — portfolio version",
           "    cat README.md           — about section",
+          "    git stash pop           — unstash my interests",
           "    clear                   — clear terminal",
           "",
           "  Tip: use ↑ / ↓ to navigate command history",
@@ -234,6 +235,21 @@ export function useTerminal() {
         return {
           output: profile.socials.map((s) => `  ${s.label.toLowerCase()}\t${s.url}`),
           type: "success",
+        };
+      }
+
+      // git stash pop — easter egg
+      if (cmd.sub === "stash" && cmd.args[0] === "pop") {
+        return {
+          type: "success",
+          output: [
+            "Applying stash@{0}: WIP on main",
+            "",
+            "Unstashed interests:",
+            ...(profile.stash ?? []).map((item) => `  ${item}`),
+            "",
+            "Dropped refs/stash@{0}",
+          ],
         };
       }
 

@@ -122,6 +122,33 @@ export function SkillsSkeleton() {
   );
 }
 
+export function ContactSkeleton() {
+  return (
+    <section className="py-24 px-4">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="rounded-xl border border-terminal-border bg-terminal-surface overflow-hidden">
+          <div className="flex items-center gap-1.5 px-4 py-3 bg-terminal-bg border-b border-terminal-border">
+            <Skeleton className="w-3 h-3 rounded-full" />
+            <Skeleton className="w-3 h-3 rounded-full" />
+            <Skeleton className="w-3 h-3 rounded-full" />
+          </div>
+          <div className="p-6 space-y-5">
+            <Skeleton className="h-9 w-full rounded-lg" />
+            <Skeleton className="h-9 w-full rounded-lg" />
+            <Skeleton className="h-24 w-full rounded-lg" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function ExperienceSkeleton() {
   return (
     <section className="py-24 px-4">

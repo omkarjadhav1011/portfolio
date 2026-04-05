@@ -50,6 +50,7 @@ export interface CommitEntry {
   description: string[];
   branch: string;
   branchColor: string;
+  colorKey?: "green" | "blue" | "yellow" | "orange";
   tags?: string[];
   url?: string;
 }
@@ -74,6 +75,15 @@ export interface Profile {
   location: string;
   socials: SocialLink[];
   funFacts: string[];
+  stash?: string[];
+}
+
+// ─── Skills Diff ─────────────────────────────────────────────────────────────
+
+export interface SkillDiff {
+  name: string;
+  type: "added" | "deprecated" | "modified";
+  note?: string;
 }
 
 // ─── Terminal ────────────────────────────────────────────────────────────────

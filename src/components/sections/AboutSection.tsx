@@ -1,11 +1,46 @@
 "use client";
 
+import * as Tooltip from "@radix-ui/react-tooltip";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { Badge } from "@/components/ui/Badge";
 import { profile } from "@/data/profile";
 import { allSkills } from "@/data/skills";
 
 const topSkills = allSkills.filter((s) => s.level >= 4).slice(0, 8);
+
+// Sentence-level blame annotations for the bio
+const BIO_BLAMES = [
+  {
+    text: "I build things for the web and explore the intersection of software and data.",
+    author: "omkarjadhav",
+    date: "Aug 2023",
+    message: "Initial commit: About me",
+  },
+  {
+    text: "Currently pursuing B.Tech in Computer Science (Data Science) at KIT Kolhapur,",
+    author: "omkarjadhav",
+    date: "Aug 2023",
+    message: "Started B.Tech CSE",
+  },
+  {
+    text: "obsessed with clean code, great UX, and systems that scale.",
+    author: "omkarjadhav",
+    date: "Dec 2023",
+    message: "refactor: priorities updated",
+  },
+  {
+    text: "When I'm not writing code, I'm experimenting with machine learning models,",
+    author: "omkarjadhav",
+    date: "Mar 2024",
+    message: "feat: ML side projects",
+  },
+  {
+    text: "building full-stack apps, or debugging something I broke at 2am.",
+    author: "omkarjadhav",
+    date: "Jun 2024",
+    message: "chore: honest disclosure",
+  },
+];
 
 export function AboutSection() {
   return (
@@ -27,11 +62,6 @@ export function AboutSection() {
               <div className="flex items-center gap-2 font-mono text-xs text-text-muted">
                 <span className="text-git-orange">📄</span>
                 <span>README.md</span>
-              </div>
-              <div className="flex items-center gap-3 text-xs text-text-faint font-mono">
-                <span>Last updated: 2 days ago</span>
-                <span>·</span>
-                <span>47 commits to this file</span>
               </div>
             </div>
 
@@ -61,9 +91,32 @@ export function AboutSection() {
               {/* ## About Me */}
               <div>
                 <h3 className="text-git-blue text-lg font-bold mb-3">## About Me</h3>
-                <div className="text-text-secondary text-sm leading-7 whitespace-pre-line">
-                  {profile.bio}
-                </div>
+                <Tooltip.Provider delayDuration={200}>
+                  <div className="text-text-secondary text-sm leading-7 space-y-1">
+                    {BIO_BLAMES.map((segment, i) => (
+                      <Tooltip.Root key={i}>
+                        <Tooltip.Trigger asChild>
+                          <span className="cursor-help hover:bg-terminal-border/30 rounded px-0.5 transition-colors inline">
+                            {segment.text}{" "}
+                          </span>
+                        </Tooltip.Trigger>
+                        <Tooltip.Portal>
+                          <Tooltip.Content
+                            className="z-50 rounded-lg border border-terminal-border bg-terminal-window px-3 py-2 font-mono text-xs text-text-muted shadow-terminal max-w-xs"
+                            sideOffset={4}
+                          >
+                            <span className="text-git-yellow">{segment.author}</span>
+                            <span className="text-text-faint"> • </span>
+                            <span className="text-text-secondary">{segment.date}</span>
+                            <span className="text-text-faint"> • </span>
+                            <span className="text-text-secondary">&ldquo;{segment.message}&rdquo;</span>
+                            <Tooltip.Arrow className="fill-terminal-border" />
+                          </Tooltip.Content>
+                        </Tooltip.Portal>
+                      </Tooltip.Root>
+                    ))}
+                  </div>
+                </Tooltip.Provider>
               </div>
 
               <hr className="border-terminal-border" />

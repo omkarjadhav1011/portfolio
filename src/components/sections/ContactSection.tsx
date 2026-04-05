@@ -150,7 +150,6 @@ export function ContactSection() {
                 >
                   <span className="text-git-green">→</span>
                   {s.label}
-                  <span className="text-text-faint text-xs">{s.url}</span>
                 </a>
               ))}
             </div>

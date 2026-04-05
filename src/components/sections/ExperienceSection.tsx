@@ -6,6 +6,7 @@ import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { Badge } from "@/components/ui/Badge";
 import { timeline } from "@/data/experience";
 import { formatDateRange } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 const TYPE_ICONS: Record<string, string> = {
   job: "💼",
@@ -14,7 +15,28 @@ const TYPE_ICONS: Record<string, string> = {
   project: "📁",
 };
 
+const COLOR_CLASSES: Record<string, { text: string; border: string; bg: string }> = {
+  green:  { text: "text-git-green",  border: "border-git-green/40",  bg: "bg-git-green/10"  },
+  blue:   { text: "text-git-blue",   border: "border-git-blue/40",   bg: "bg-git-blue/10"   },
+  yellow: { text: "text-git-yellow", border: "border-git-yellow/40", bg: "bg-git-yellow/10" },
+  orange: { text: "text-git-orange", border: "border-git-orange/40", bg: "bg-git-orange/10" },
+};
+
+const MONTHS: Record<string, number> = {
+  Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+  Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11,
+};
+
+function parseDateToMs(dateStr: string): number {
+  const [mon, yr] = dateStr.split(" ");
+  return new Date(Number(yr), MONTHS[mon] ?? 0).getTime();
+}
+
 export function ExperienceSection() {
+  const sorted = [...timeline].sort(
+    (a, b) => parseDateToMs(b.date) - parseDateToMs(a.date)
+  );
+
   return (
     <section id="experience" className="py-24 px-4 bg-terminal-surface/30">
       <div className="max-w-3xl mx-auto">
@@ -35,8 +57,8 @@ export function ExperienceSection() {
 
         {/* Timeline */}
         <div className="relative">
-          {timeline.map((entry, i) => (
-            <CommitEntry key={entry.hash} entry={entry} index={i} isLast={i === timeline.length - 1} />
+          {sorted.map((entry, i) => (
+            <CommitEntry key={entry.hash} entry={entry} index={i} isLast={i === sorted.length - 1} />
           ))}
         </div>
       </div>
@@ -55,6 +77,7 @@ function CommitEntry({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
+  const colors = COLOR_CLASSES[entry.colorKey ?? "green"];
 
   return (
     <div ref={ref} className="relative flex gap-0">
@@ -109,15 +132,8 @@ function CommitEntry({
       >
         {/* Commit header */}
         <div className="flex flex-wrap items-center gap-2 mb-2 font-mono text-xs text-text-faint">
-          <span style={{ color: entry.branchColor }}>{entry.hash}</span>
-          <span
-            className="px-1.5 py-0.5 rounded border text-[10px]"
-            style={{
-              borderColor: `${entry.branchColor}40`,
-              color: entry.branchColor,
-              backgroundColor: `${entry.branchColor}10`,
-            }}
-          >
+          <span className={colors.text}>{entry.hash}</span>
+          <span className={cn("px-1.5 py-0.5 rounded border text-[10px]", colors.text, colors.border, colors.bg)}>
             {entry.branch}
           </span>
           <span>{formatDateRange(entry.date, entry.dateEnd)}</span>
@@ -131,7 +147,7 @@ function CommitEntry({
               <h3 className="font-mono font-bold text-text-primary text-base">
                 {entry.title}
               </h3>
-              <p className="text-sm font-mono" style={{ color: entry.branchColor }}>
+              <p className={cn("text-sm font-mono", colors.text)}>
                 @ {entry.org}
               </p>
             </div>

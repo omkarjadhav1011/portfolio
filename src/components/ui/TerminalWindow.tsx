@@ -7,7 +7,6 @@ interface TerminalWindowProps {
   children: React.ReactNode;
   className?: string;
   showDots?: boolean;
-  animate?: boolean;
 }
 
 export function TerminalWindow({
@@ -15,14 +14,12 @@ export function TerminalWindow({
   children,
   className,
   showDots = true,
-  animate = true,
 }: TerminalWindowProps) {
   return (
     <div
       className={cn(
         "rounded-xl overflow-hidden shadow-terminal border border-terminal-border",
         "bg-terminal-window font-mono text-sm",
-        animate && "animate-terminal-boot",
         className
       )}
     >

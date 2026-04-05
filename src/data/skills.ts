@@ -1,4 +1,4 @@
-import type { SkillBranch } from "@/types";
+import type { SkillBranch, SkillDiff } from "@/types";
 
 export const skillBranches: SkillBranch[] = [
   {
@@ -53,3 +53,14 @@ export const skillBranches: SkillBranch[] = [
 ];
 
 export const allSkills = skillBranches.flatMap((b) => b.skills);
+
+export const skillsDiff: SkillDiff[] = [
+  { type: "added",      name: "TypeScript",            note: "migrating all JS projects" },
+  { type: "added",      name: "Next.js 14 App Router", note: "used in this portfolio" },
+  { type: "added",      name: "Docker",                note: "learning containerization" },
+  { type: "added",      name: "PostgreSQL",            note: "replacing MySQL in new projects" },
+  { type: "modified",   name: "Python",                note: "leveling up: async + FastAPI" },
+  { type: "modified",   name: "React",                 note: "deepening patterns & performance" },
+  { type: "deprecated", name: "jQuery",                note: "replaced by React" },
+  { type: "deprecated", name: "Bootstrap",             note: "replaced by Tailwind CSS" },
+];

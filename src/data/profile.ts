@@ -38,4 +38,11 @@ building full-stack apps, or debugging something I broke at 2am.`,
     "I debug in production (just kidding... mostly)",
     "My Hugging Face API calls cost more than my monthly coffee budget",
   ],
+  stash: [
+    "☕  Coffee-driven development — 3 cups before 10am",
+    "♟  Plays chess to debug decision-making",
+    "📚  Reading: Designing Data-Intensive Applications (DDIA)",
+    "🎵  Codes to lo-fi beats and post-rock",
+    "🌱  Contributing to open source, one PR at a time",
+  ],
 };

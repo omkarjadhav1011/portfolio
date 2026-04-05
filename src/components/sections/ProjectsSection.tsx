@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { RepoCard } from "@/components/ui/RepoCard";
 import { projects } from "@/data/projects";
+import { profile } from "@/data/profile";
 
 type Filter = "all" | "active" | "archived" | "wip";
 
@@ -78,7 +79,7 @@ export function ProjectsSection() {
         <ScrollReveal delay={0.2}>
           <div className="mt-10 text-center">
             <a
-              href="https://github.com/yourusername"
+              href={profile.socials.find((s) => s.icon === "github")?.url ?? "https://github.com"}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 font-mono text-sm text-text-muted hover:text-git-blue transition-colors"

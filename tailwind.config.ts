@@ -44,20 +44,15 @@ const config: Config = {
       },
       animation: {
         "cursor-blink": "blink 1s step-end infinite",
-        "scan-line": "scanline 8s linear infinite",
         "fade-up": "fadeUp 0.6s ease-out forwards",
         "draw-line": "drawLine 1.5s ease-out forwards",
-        glow: "glow 2s ease-in-out infinite alternate",
         "terminal-boot": "terminalBoot 0.3s ease-out forwards",
+        float: "float 2s ease-in-out infinite",
       },
       keyframes: {
         blink: {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0" },
-        },
-        scanline: {
-          "0%": { transform: "translateY(-100%)" },
-          "100%": { transform: "translateY(100vh)" },
         },
         fadeUp: {
           "0%": { opacity: "0", transform: "translateY(20px)" },
@@ -67,20 +62,19 @@ const config: Config = {
           "0%": { strokeDashoffset: "1000" },
           "100%": { strokeDashoffset: "0" },
         },
-        glow: {
-          "0%": { textShadow: "0 0 4px #00ff88, 0 0 8px #00ff88" },
-          "100%": { textShadow: "0 0 8px #00ff88, 0 0 20px #00ff88, 0 0 40px #00ff8844" },
-        },
         terminalBoot: {
           "0%": { opacity: "0", transform: "scale(0.98)" },
           "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-6px)" },
         },
       },
       boxShadow: {
         terminal: "0 0 0 1px #30363d, 0 8px 32px rgba(0,0,0,0.6)",
         "terminal-green": "0 0 0 1px #238636, 0 0 20px rgba(0,255,136,0.1)",
         "card-hover": "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px #30363d",
-        glow: "0 0 20px rgba(0,255,136,0.3)",
       },
       backgroundImage: {
         "grid-pattern":

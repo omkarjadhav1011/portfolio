@@ -16,6 +16,7 @@ export const timeline: CommitEntry[] = [
     ],
     branch: "work/dnyanda-solutions",
     branchColor: "#00ff88",
+    colorKey: "green",
     tags: ["PHP", "HTML", "CSS", "JavaScript", "MySQL"],
   },
   {
@@ -30,6 +31,7 @@ export const timeline: CommitEntry[] = [
     ],
     branch: "cert/python-bootcamp",
     branchColor: "#e3b341",
+    colorKey: "yellow",
     tags: ["Python", "Udemy", "Certification"],
   },
   {
@@ -44,6 +46,7 @@ export const timeline: CommitEntry[] = [
     ],
     branch: "cert/java-programming",
     branchColor: "#e3b341",
+    colorKey: "yellow",
     tags: ["Java", "OOP", "Udemy", "Certification"],
   },
   {
@@ -60,6 +63,7 @@ export const timeline: CommitEntry[] = [
     ],
     branch: "edu/btech-cse",
     branchColor: "#58a6ff",
+    colorKey: "blue",
     tags: ["DSA", "OS", "DBMS", "Machine Learning", "Data Science"],
   },
   {
@@ -75,6 +79,7 @@ export const timeline: CommitEntry[] = [
     ],
     branch: "edu/diploma-cse",
     branchColor: "#58a6ff",
+    colorKey: "blue",
     tags: ["C++", "Java", "Networking", "DBMS"],
   },
   {
@@ -88,6 +93,7 @@ export const timeline: CommitEntry[] = [
     ],
     branch: "edu/high-school",
     branchColor: "#58a6ff",
+    colorKey: "blue",
     tags: ["Mathematics", "Science"],
   },
 ];

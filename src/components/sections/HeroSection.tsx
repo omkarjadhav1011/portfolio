@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { TerminalWindow } from "@/components/ui/TerminalWindow";
 import { TypewriterText } from "@/components/ui/TypewriterText";
@@ -23,8 +22,6 @@ const BOOT_LINES = [
 ];
 
 export function HeroSection() {
-  const [bootComplete, setBootComplete] = useState(false);
-
   return (
     <section
       id="hero"
@@ -35,43 +32,46 @@ export function HeroSection() {
       {/* Radial gradient overlay */}
       <div className="absolute inset-0 bg-gradient-radial from-transparent via-terminal-bg/60 to-terminal-bg pointer-events-none" />
 
-      <div className="relative w-full max-w-3xl mx-auto space-y-8">
-        {/* Terminal boot sequence */}
-        <TerminalWindow
-          title={`${profile.handle}@portfolio: ~`}
-          className="w-full"
-        >
-          <TypewriterText
-            lines={BOOT_LINES}
-            startDelay={800}
-            onComplete={() => setBootComplete(true)}
-            lineColors={{
-              0: "text-git-green",
-              5: "text-git-green",
-              6: "text-git-green",
-              8: "text-git-green",
-            }}
-          />
-        </TerminalWindow>
+      <div className="relative w-full max-w-5xl mx-auto">
+        {/* Two-column layout: terminal left, name right */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          {/* Left column: terminal boot sequence (decorative, runs freely) */}
+          <TerminalWindow
+            title={`${profile.handle}@portfolio: ~`}
+            className="w-full"
+          >
+            <TypewriterText
+              lines={BOOT_LINES}
+              startDelay={800}
+              lineColors={{
+                0: "text-git-green",
+                5: "text-git-green",
+                6: "text-git-green",
+                8: "text-git-green",
+              }}
+            />
+          </TerminalWindow>
 
-        {/* Name reveal after boot */}
-        {bootComplete && (
+          {/* Right column: name and CTAs — visible immediately on mount */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="text-center space-y-4"
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="text-center md:text-left space-y-4"
           >
             <h1 className="font-mono">
               <span className="block text-text-muted text-sm mb-2 tracking-widest uppercase">
                 # {profile.handle}
               </span>
-              <span className="block text-4xl md:text-6xl font-bold text-text-primary animate-glow">
+              <span
+                className="block text-4xl md:text-5xl font-bold text-text-primary"
+                style={{ textShadow: "0 0 8px rgba(0,255,136,0.4)" }}
+              >
                 {profile.name}
               </span>
             </h1>
 
-            <p className="text-text-muted font-mono text-sm md:text-base max-w-lg mx-auto">
+            <p className="text-text-muted font-mono text-sm md:text-base max-w-lg">
               {profile.headline}
             </p>
 
@@ -87,8 +87,8 @@ export function HeroSection() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="flex flex-wrap justify-center gap-3 pt-2"
+              transition={{ delay: 0.3 }}
+              className="flex flex-wrap justify-center md:justify-start gap-3 pt-2"
             >
               <a
                 href="#projects"
@@ -112,26 +112,35 @@ export function HeroSection() {
                 <span className="text-text-muted">$</span>
                 git show --contact
               </a>
+              {/* NOTE: place your resume at /public/resume.pdf */}
+              <a
+                href="/resume.pdf"
+                download
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-git-purple/40 bg-git-purple/10 text-git-purple text-sm font-mono hover:bg-git-purple/20 hover:border-git-purple/70 transition-all duration-200"
+              >
+                <span className="text-text-muted">$</span>
+                git export --resume
+              </a>
             </motion.div>
           </motion.div>
-        )}
+        </div>
 
-        {/* Scroll hint */}
-        {bootComplete && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="flex justify-center"
-          >
-            <div className="flex flex-col items-center gap-1 text-text-faint text-xs font-mono animate-bounce">
-              <span>scroll</span>
-              <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current" strokeWidth={2}>
-                <path d="M12 5v14M5 12l7 7 7-7" />
-              </svg>
-            </div>
-          </motion.div>
-        )}
+        {/* Scroll hint — below the grid */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="flex justify-center mt-12"
+        >
+          <div className="flex flex-col items-center gap-1 text-text-faint text-xs font-mono animate-float">
+            <span>scroll</span>
+            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current" strokeWidth={2}>
+              <path d="M12 5v14M5 12l7 7 7-7" />
+            </svg>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
