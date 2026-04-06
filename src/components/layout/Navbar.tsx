@@ -38,7 +38,7 @@ export function Navbar() {
           {/* Logo / branch indicator */}
           <button
             onClick={() => scrollTo("hero")}
-            className="flex items-center gap-2 font-mono text-sm hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 font-mono text-sm hover:opacity-80 transition-opacity cursor-pointer"
           >
             <span className="text-git-green font-bold">⑂</span>
             <span className="text-text-primary font-semibold">{profile.handle}</span>

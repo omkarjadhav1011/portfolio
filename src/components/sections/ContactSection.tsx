@@ -146,7 +146,7 @@ export function ContactSection() {
                   href={s.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-text-muted hover:text-git-blue transition-colors"
+                  className="flex items-center gap-2 text-text-muted hover:text-git-blue transition-colors cursor-pointer"
                 >
                   <span className="text-git-green">→</span>
                   {s.label}

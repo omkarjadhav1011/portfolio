@@ -2,17 +2,18 @@
 
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
+import { Briefcase, GraduationCap, Trophy, Folder } from "lucide-react";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { Badge } from "@/components/ui/Badge";
 import type { CommitEntry } from "@/types";
 import { formatDateRange } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
-const TYPE_ICONS: Record<string, string> = {
-  job: "💼",
-  education: "🎓",
-  achievement: "🏆",
-  project: "📁",
+const TYPE_ICON_MAP: Record<string, React.ElementType> = {
+  job: Briefcase,
+  education: GraduationCap,
+  achievement: Trophy,
+  project: Folder,
 };
 
 const COLOR_CLASSES: Record<string, { text: string; border: string; bg: string }> = {
@@ -146,7 +147,7 @@ function CommitEntry({
         {/* Commit card */}
         <div className="rounded-xl border border-terminal-border bg-terminal-surface p-5 hover:border-terminal-border/80 transition-colors">
           <div className="flex items-start gap-3 mb-3">
-            <span className="text-xl">{TYPE_ICONS[entry.type]}</span>
+            {(() => { const Icon = TYPE_ICON_MAP[entry.type] ?? Folder; return <Icon size={18} className={cn("shrink-0 mt-0.5", colors.text)} />; })()}
             <div>
               <h3 className="font-mono font-bold text-text-primary text-base">
                 {entry.title}

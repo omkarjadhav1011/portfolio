@@ -19,7 +19,7 @@ export function Badge({
   const variants: Record<string, string> = {
     branch:
       "border-git-blue/40 bg-git-blue/10 text-git-blue before:content-['⑂_'] before:opacity-60",
-    tag: "border-git-orange/40 bg-git-orange/10 text-git-orange before:content-['🏷_'] before:text-[10px]",
+    tag: "border-git-orange/40 bg-git-orange/10 text-git-orange before:content-['#'] before:text-[10px] before:opacity-60 before:mr-0.5",
     language: "border-terminal-border bg-terminal-surface text-text-secondary",
     status: "border-git-green/40 bg-git-green/10 text-git-green",
   };

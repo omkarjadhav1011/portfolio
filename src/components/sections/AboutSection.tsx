@@ -1,6 +1,7 @@
 "use client";
 
 import * as Tooltip from "@radix-ui/react-tooltip";
+import { FileText, MapPin, Zap } from "lucide-react";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { Badge } from "@/components/ui/Badge";
 import type { Profile, Skill } from "@/types";
@@ -62,7 +63,7 @@ export function AboutSection({ profile, topSkills }: AboutSectionProps) {
             {/* README header bar */}
             <div className="flex items-center justify-between px-5 py-3 bg-terminal-bg border-b border-terminal-border">
               <div className="flex items-center gap-2 font-mono text-xs text-text-muted">
-                <span className="text-git-orange">📄</span>
+                <FileText size={12} className="text-git-orange shrink-0" />
                 <span>README.md</span>
               </div>
             </div>
@@ -79,12 +80,18 @@ export function AboutSection({ profile, topSkills }: AboutSectionProps) {
 
               {/* Badges row */}
               <div className="flex flex-wrap gap-2">
-                {profile.availableForWork && <Badge variant="status">⚡ Available for work</Badge>}
+                {profile.availableForWork && (
+                  <Badge variant="status">
+                    <Zap size={10} className="shrink-0" />
+                    Available for work
+                  </Badge>
+                )}
                 <Badge variant="branch">main</Badge>
                 <Badge variant="tag">B.Tech CSE</Badge>
                 <Badge variant="tag">Open Source</Badge>
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs border border-terminal-border bg-terminal-bg text-text-muted">
-                  📍 {profile.location}
+                  <MapPin size={10} className="shrink-0" />
+                  {profile.location}
                 </span>
               </div>
 
@@ -169,7 +176,7 @@ export function AboutSection({ profile, topSkills }: AboutSectionProps) {
                       href={social.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-sm text-text-muted hover:text-git-blue transition-colors"
+                      className="flex items-center gap-1.5 text-sm text-text-muted hover:text-git-blue transition-colors cursor-pointer"
                     >
                       <span className="text-git-blue">→</span>
                       {social.label}
@@ -177,7 +184,7 @@ export function AboutSection({ profile, topSkills }: AboutSectionProps) {
                   ))}
                   <a
                     href={`mailto:${profile.email}`}
-                    className="flex items-center gap-1.5 text-sm text-text-muted hover:text-git-green transition-colors"
+                    className="flex items-center gap-1.5 text-sm text-text-muted hover:text-git-green transition-colors cursor-pointer"
                   >
                     <span className="text-git-green">→</span>
                     Email

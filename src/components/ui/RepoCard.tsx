@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star, GitFork, ExternalLink, GitCommitHorizontal } from "lucide-react";
+import { Star, GitFork, ExternalLink, GitCommitHorizontal, Folder } from "lucide-react";
 import Link from "next/link";
 import { LanguageDot } from "./LanguageDot";
 import { Badge } from "./Badge";
@@ -37,7 +37,7 @@ export function RepoCard({ project, index = 0 }: RepoCardProps) {
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-git-blue text-base">📁</span>
+            <Folder size={14} className="text-git-blue shrink-0" />
             <span className="font-mono font-semibold text-git-blue truncate group-hover/card:underline">
               {project.repoName}
             </span>

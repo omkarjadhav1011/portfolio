@@ -68,7 +68,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
                 # {profile.handle}
               </span>
               <span
-                className="block text-4xl md:text-5xl font-bold text-text-primary"
+                className="block text-5xl md:text-6xl font-bold text-text-primary"
                 style={{ textShadow: "0 0 8px rgba(0,255,136,0.4)" }}
               >
                 {profile.name}

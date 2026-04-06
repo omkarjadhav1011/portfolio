@@ -54,7 +54,7 @@ export function ProjectsSection({ projects, githubUrl }: ProjectsSectionProps) {
               <button
                 key={f.value}
                 onClick={() => setActiveFilter(f.value)}
-                className={`px-3 py-1.5 rounded-lg border transition-all duration-200 ${
+                className={`px-3 py-1.5 rounded-lg border transition-all duration-200 cursor-pointer ${
                   activeFilter === f.value
                     ? "border-git-green/60 bg-git-green/10 text-git-green"
                     : "border-terminal-border text-text-muted hover:border-terminal-border/80 hover:text-text-secondary"
