@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { Badge } from "@/components/ui/Badge";
-import { timeline } from "@/data/experience";
+import type { CommitEntry } from "@/types";
 import { formatDateRange } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +32,11 @@ function parseDateToMs(dateStr: string): number {
   return new Date(Number(yr), MONTHS[mon] ?? 0).getTime();
 }
 
-export function ExperienceSection() {
+interface ExperienceSectionProps {
+  timeline: CommitEntry[];
+}
+
+export function ExperienceSection({ timeline }: ExperienceSectionProps) {
   const sorted = [...timeline].sort(
     (a, b) => parseDateToMs(b.date) - parseDateToMs(a.date)
   );
@@ -71,7 +75,7 @@ function CommitEntry({
   index,
   isLast,
 }: {
-  entry: (typeof timeline)[0];
+  entry: CommitEntry;
   index: number;
   isLast: boolean;
 }) {

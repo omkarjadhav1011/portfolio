@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ExternalLink, GitFork, Star, GitCommitHorizontal } from "lucide-react";
-import { projects } from "@/data/projects";
+import { prisma } from "@/lib/prisma";
 import { Badge } from "@/components/ui/Badge";
 import { LanguageDot } from "@/components/ui/LanguageDot";
 
@@ -10,17 +10,30 @@ interface Props {
   params: { slug: string };
 }
 
-export function generateStaticParams() {
-  return projects.map((p) => ({ slug: p.slug }));
+export async function generateStaticParams() {
+  try {
+    const projects = await prisma.project.findMany({ select: { slug: true } });
+    return projects.map((p) => ({ slug: p.slug }));
+  } catch {
+    const { projects } = await import("@/data/projects");
+    return projects.map((p) => ({ slug: p.slug }));
+  }
 }
 
-export function generateMetadata({ params }: Props): Metadata {
-  const project = projects.find((p) => p.slug === params.slug);
-  if (!project) return { title: "Not Found" };
-  return {
-    title: project.repoName,
-    description: project.longDescription ?? project.description,
-  };
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  try {
+    const project = await prisma.project.findUnique({ where: { slug: params.slug } });
+    if (!project) return { title: "Not Found" };
+    return {
+      title: project.repoName,
+      description: project.longDescription ?? project.description,
+    };
+  } catch {
+    const { projects } = await import("@/data/projects");
+    const project = projects.find((p) => p.slug === params.slug);
+    if (!project) return { title: "Not Found" };
+    return { title: project.repoName, description: project.longDescription ?? project.description };
+  }
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -29,9 +42,19 @@ const STATUS_COLORS: Record<string, string> = {
   archived: "text-text-muted border-terminal-border bg-terminal-surface",
 };
 
-export default function ProjectPage({ params }: Props) {
-  const project = projects.find((p) => p.slug === params.slug);
-  if (!project) notFound();
+export default async function ProjectPage({ params }: Props) {
+  let project: { id: string; repoName: string; description: string; language: string; languageColor: string; stars: number; forks: number; commits: number; lastCommit: string; lastCommitMsg: string; tags: string[]; liveUrl?: string | null; repoUrl?: string | null; status: string; longDescription?: string | null; pinned: boolean };
+
+  try {
+    const raw = await prisma.project.findUnique({ where: { slug: params.slug } });
+    if (!raw) notFound();
+    project = { ...raw, tags: JSON.parse(raw.tags) as string[] };
+  } catch {
+    const { projects } = await import("@/data/projects");
+    const found = projects.find((p) => p.slug === params.slug);
+    if (!found) notFound();
+    project = found;
+  }
 
   return (
     <main className="min-h-screen py-24 px-4">
@@ -71,7 +94,7 @@ export default function ProjectPage({ params }: Props) {
                 </div>
                 <p className="text-text-muted text-sm">{project.description}</p>
               </div>
-              <span className={`text-xs px-2.5 py-1 rounded-full border font-mono ${STATUS_COLORS[project.status]}`}>
+              <span className={`text-xs px-2.5 py-1 rounded-full border font-mono ${STATUS_COLORS[project.status] ?? ""}`}>
                 {project.status}
               </span>
             </div>

@@ -1,0 +1,245 @@
+"use client";
+
+import { useState } from "react";
+import { AdminModal } from "@/components/admin/AdminModal";
+import { FormInput, FormTextarea, FormSelect, FormCheckbox } from "@/components/admin/FormField";
+import { TagInput } from "@/components/admin/TagInput";
+import { useToast } from "@/components/admin/ToastProvider";
+import { useRouter } from "next/navigation";
+
+interface Project {
+  id: string;
+  slug: string;
+  repoName: string;
+  description: string;
+  language: string;
+  languageColor: string;
+  stars: number;
+  forks: number;
+  commits: number;
+  lastCommit: string;
+  lastCommitMsg: string;
+  tags: string[];
+  liveUrl?: string | null;
+  repoUrl?: string | null;
+  status: string;
+  pinned: boolean;
+  longDescription?: string | null;
+}
+
+const EMPTY: Omit<Project, "id"> = {
+  slug: "", repoName: "", description: "", language: "", languageColor: "#3178c6",
+  stars: 0, forks: 0, commits: 0, lastCommit: "just now", lastCommitMsg: "",
+  tags: [], liveUrl: "", repoUrl: "", status: "active", pinned: false, longDescription: "",
+};
+
+const STATUS_OPTIONS = [
+  { value: "active", label: "active" },
+  { value: "wip", label: "wip" },
+  { value: "archived", label: "archived" },
+];
+
+export function ProjectsClient({ initialProjects }: { initialProjects: Project[] }) {
+  const [projects, setProjects] = useState(initialProjects);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<Project | null>(null);
+  const [form, setForm] = useState<Omit<Project, "id">>(EMPTY);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+
+  function openCreate() {
+    setEditing(null);
+    setForm(EMPTY);
+    setModalOpen(true);
+  }
+
+  function openEdit(p: Project) {
+    setEditing(p);
+    setForm({ ...p, liveUrl: p.liveUrl ?? "", repoUrl: p.repoUrl ?? "", longDescription: p.longDescription ?? "" });
+    setModalOpen(true);
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Delete this project? This cannot be undone.")) return;
+    const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+      toast("Project deleted", "success");
+      router.refresh();
+    } else {
+      toast("Failed to delete", "error");
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const url = editing ? `/api/projects/${editing.id}` : "/api/projects";
+      const method = editing ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, stars: Number(form.stars), forks: Number(form.forks), commits: Number(form.commits) }),
+      });
+      if (res.ok) {
+        const saved: Project = await res.json();
+        if (editing) {
+          setProjects((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
+          toast("Project updated", "success");
+        } else {
+          setProjects((prev) => [saved, ...prev]);
+          toast("Project created", "success");
+        }
+        setModalOpen(false);
+        router.refresh();
+      } else {
+        const err = await res.json();
+        toast(err.error ?? "Failed to save", "error");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function field(key: keyof typeof form, value: string | number | boolean | string[]) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  const STATUS_COLORS: Record<string, string> = {
+    active: "text-git-green",
+    wip: "text-git-yellow",
+    archived: "text-text-muted",
+  };
+
+  return (
+    <div className="space-y-6 font-mono">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-text-faint text-xs mb-1">$ git ls-remote --heads</div>
+          <h1 className="text-xl font-bold text-text-primary">Projects</h1>
+          <p className="text-text-muted text-xs mt-0.5"># {projects.length} repositories</p>
+        </div>
+        <button
+          onClick={openCreate}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-git-green/40 bg-git-green/10 text-git-green text-xs hover:bg-git-green/20 hover:border-git-green/70 transition-all"
+        >
+          <span>+</span> new project
+        </button>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-xl border border-terminal-border bg-terminal-surface overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-terminal-border bg-terminal-bg">
+                <th className="text-left px-4 py-3 text-text-muted font-normal">repo</th>
+                <th className="text-left px-4 py-3 text-text-muted font-normal">lang</th>
+                <th className="text-left px-4 py-3 text-text-muted font-normal">status</th>
+                <th className="text-left px-4 py-3 text-text-muted font-normal">pinned</th>
+                <th className="text-right px-4 py-3 text-text-muted font-normal">actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {projects.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="text-center py-12 text-text-faint">
+                    No projects yet — create your first one
+                  </td>
+                </tr>
+              )}
+              {projects.map((p) => (
+                <tr key={p.id} className="border-b border-terminal-border/50 hover:bg-terminal-bg/40 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="text-text-primary">{p.repoName}</div>
+                    <div className="text-text-faint text-[10px] truncate max-w-[200px]">{p.description}</div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.languageColor }} />
+                      {p.language}
+                    </span>
+                  </td>
+                  <td className={`px-4 py-3 ${STATUS_COLORS[p.status] ?? "text-text-muted"}`}>{p.status}</td>
+                  <td className="px-4 py-3 text-text-muted">{p.pinned ? "📌" : "—"}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      onClick={() => openEdit(p)}
+                      className="text-git-blue hover:underline mr-3"
+                    >
+                      edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(p.id)}
+                      className="text-git-red hover:underline"
+                    >
+                      delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Modal */}
+      <AdminModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? `edit — ${editing.repoName}` : "new project"}
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <FormInput label="repo name" value={form.repoName} onChange={(e) => field("repoName", e.target.value)} required />
+            <FormInput label="slug (url)" value={form.slug} onChange={(e) => field("slug", e.target.value)} required placeholder="my-project" />
+          </div>
+          <FormInput label="description" value={form.description} onChange={(e) => field("description", e.target.value)} required />
+          <div className="grid grid-cols-2 gap-3">
+            <FormInput label="language" value={form.language} onChange={(e) => field("language", e.target.value)} required />
+            <FormInput label="language color (hex)" value={form.languageColor} onChange={(e) => field("languageColor", e.target.value)} placeholder="#3178c6" />
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <FormInput label="stars" type="number" value={form.stars} onChange={(e) => field("stars", e.target.value)} min={0} />
+            <FormInput label="forks" type="number" value={form.forks} onChange={(e) => field("forks", e.target.value)} min={0} />
+            <FormInput label="commits" type="number" value={form.commits} onChange={(e) => field("commits", e.target.value)} min={0} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <FormInput label="last commit" value={form.lastCommit} onChange={(e) => field("lastCommit", e.target.value)} placeholder="just now" />
+            <FormInput label="last commit msg" value={form.lastCommitMsg} onChange={(e) => field("lastCommitMsg", e.target.value)} />
+          </div>
+          <TagInput label="tags" values={form.tags} onChange={(v) => field("tags", v)} />
+          <div className="grid grid-cols-2 gap-3">
+            <FormInput label="live url" value={form.liveUrl ?? ""} onChange={(e) => field("liveUrl", e.target.value)} placeholder="https://..." />
+            <FormInput label="repo url" value={form.repoUrl ?? ""} onChange={(e) => field("repoUrl", e.target.value)} placeholder="https://github.com/..." />
+          </div>
+          <div className="grid grid-cols-2 gap-3 items-end">
+            <FormSelect label="status" value={form.status} onChange={(e) => field("status", e.target.value)} options={STATUS_OPTIONS} />
+            <FormCheckbox label="pinned" checked={form.pinned} onChange={(v) => field("pinned", v)} />
+          </div>
+          <FormTextarea label="long description" value={form.longDescription ?? ""} onChange={(e) => field("longDescription", e.target.value)} rows={4} />
+
+          <div className="flex gap-2 pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-2 rounded-lg border border-git-green/40 bg-git-green/10 text-git-green text-xs hover:bg-git-green/20 transition-all disabled:opacity-50"
+            >
+              {loading ? "Saving..." : editing ? "$ git commit --amend" : "$ git commit -m 'new project'"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setModalOpen(false)}
+              className="px-4 py-2 rounded-lg border border-terminal-border text-text-muted text-xs hover:text-text-secondary transition-colors"
+            >
+              cancel
+            </button>
+          </div>
+        </form>
+      </AdminModal>
+    </div>
+  );
+}

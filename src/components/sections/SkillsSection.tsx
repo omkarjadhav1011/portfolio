@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
-import { skillBranches } from "@/data/skills";
 import { skillLevelLabel } from "@/lib/utils";
-import type { Skill } from "@/types";
+import type { Skill, SkillBranch } from "@/types";
 
 const BRANCH_COLORS = ["#58a6ff", "#00ff88", "#f0883e", "#d2a8ff"];
 
@@ -72,7 +71,11 @@ function SkillNode({ skill, color, index, isHovered, onHover, onLeave }: SkillNo
   );
 }
 
-export function SkillsSection() {
+interface SkillsSectionProps {
+  skillBranches: SkillBranch[];
+}
+
+export function SkillsSection({ skillBranches }: SkillsSectionProps) {
   const [hoveredSkill, setHoveredSkill] = useState<string | null>(null);
 
   return (

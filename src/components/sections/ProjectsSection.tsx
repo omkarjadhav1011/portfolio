@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { RepoCard } from "@/components/ui/RepoCard";
-import { projects } from "@/data/projects";
-import { profile } from "@/data/profile";
+import type { Project } from "@/types";
 
 type Filter = "all" | "active" | "archived" | "wip";
 
@@ -15,7 +14,12 @@ const FILTERS: { label: string; value: Filter }[] = [
   { label: "--filter=archived", value: "archived" },
 ];
 
-export function ProjectsSection() {
+interface ProjectsSectionProps {
+  projects: Project[];
+  githubUrl: string;
+}
+
+export function ProjectsSection({ projects, githubUrl }: ProjectsSectionProps) {
   const [activeFilter, setActiveFilter] = useState<Filter>("all");
 
   const filtered =
@@ -39,6 +43,7 @@ export function ProjectsSection() {
           <p className="text-text-muted text-sm font-mono mb-8">
             # pinned repositories · {projects.length} total
           </p>
+
         </ScrollReveal>
 
         {/* Filter bar */}
@@ -79,7 +84,7 @@ export function ProjectsSection() {
         <ScrollReveal delay={0.2}>
           <div className="mt-10 text-center">
             <a
-              href={profile.socials.find((s) => s.icon === "github")?.url ?? "https://github.com"}
+              href={githubUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 font-mono text-sm text-text-muted hover:text-git-blue transition-colors"

@@ -1,9 +1,13 @@
 "use client";
 
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
-import { skillsDiff } from "@/data/skills";
+import type { SkillDiff } from "@/types";
 
-export function SkillsDiffSection() {
+interface SkillsDiffSectionProps {
+  skillsDiff: SkillDiff[];
+}
+
+export function SkillsDiffSection({ skillsDiff }: SkillsDiffSectionProps) {
   return (
     <section className="py-16 px-4">
       <div className="max-w-4xl mx-auto">

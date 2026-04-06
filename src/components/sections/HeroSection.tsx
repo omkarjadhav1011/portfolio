@@ -3,25 +3,29 @@
 import { motion } from "framer-motion";
 import { TerminalWindow } from "@/components/ui/TerminalWindow";
 import { TypewriterText } from "@/components/ui/TypewriterText";
-import { profile } from "@/data/profile";
+import type { Profile } from "@/types";
 
-const BOOT_LINES = [
-  { text: `$ git clone https://github.com/${profile.handle}/portfolio.git`, delay: 200, speed: 28 },
-  { text: "Cloning into 'portfolio'...", delay: 600, speed: 20 },
-  { text: "remote: Enumerating objects: 247, done.", delay: 100, speed: 18 },
-  { text: "remote: Counting objects: 100% (247/247), done.", delay: 0, speed: 18 },
-  { text: "Receiving objects: 100% (247/247), 1.42 MiB | done.", delay: 0, speed: 18 },
-  { text: "$ cd portfolio", delay: 500, speed: 40 },
-  { text: "$ git log --oneline -1", delay: 300, speed: 40 },
-  {
-    text: `f3a9b1c (HEAD -> main) feat: ${profile.headline}`,
-    delay: 400,
-    speed: 22,
-  },
-  { text: "$ cat README.md", delay: 500, speed: 40 },
-];
+function makeBootLines(handle: string, headline: string) {
+  return [
+    { text: `$ git clone https://github.com/${handle}/portfolio.git`, delay: 200, speed: 28 },
+    { text: "Cloning into 'portfolio'...", delay: 600, speed: 20 },
+    { text: "remote: Enumerating objects: 247, done.", delay: 100, speed: 18 },
+    { text: "remote: Counting objects: 100% (247/247), done.", delay: 0, speed: 18 },
+    { text: "Receiving objects: 100% (247/247), 1.42 MiB | done.", delay: 0, speed: 18 },
+    { text: "$ cd portfolio", delay: 500, speed: 40 },
+    { text: "$ git log --oneline -1", delay: 300, speed: 40 },
+    { text: `f3a9b1c (HEAD -> main) feat: ${headline}`, delay: 400, speed: 22 },
+    { text: "$ cat README.md", delay: 500, speed: 40 },
+  ];
+}
 
-export function HeroSection() {
+interface HeroSectionProps {
+  profile: Profile;
+}
+
+export function HeroSection({ profile }: HeroSectionProps) {
+  const bootLines = makeBootLines(profile.handle, profile.headline);
+
   return (
     <section
       id="hero"
@@ -35,13 +39,13 @@ export function HeroSection() {
       <div className="relative w-full max-w-5xl mx-auto">
         {/* Two-column layout: terminal left, name right */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          {/* Left column: terminal boot sequence (decorative, runs freely) */}
+          {/* Left column: terminal boot sequence */}
           <TerminalWindow
             title={`${profile.handle}@portfolio: ~`}
             className="w-full"
           >
             <TypewriterText
-              lines={BOOT_LINES}
+              lines={bootLines}
               startDelay={800}
               lineColors={{
                 0: "text-git-green",
@@ -52,7 +56,7 @@ export function HeroSection() {
             />
           </TerminalWindow>
 
-          {/* Right column: name and CTAs — visible immediately on mount */}
+          {/* Right column: name and CTAs */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -83,7 +87,7 @@ export function HeroSection() {
               </div>
             )}
 
-            {/* CTA Buttons styled as git commands */}
+            {/* CTA Buttons */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -112,7 +116,6 @@ export function HeroSection() {
                 <span className="text-text-muted">$</span>
                 git show --contact
               </a>
-              {/* NOTE: place your resume at /public/resume.pdf */}
               <a
                 href="/resume.pdf"
                 download
@@ -127,7 +130,7 @@ export function HeroSection() {
           </motion.div>
         </div>
 
-        {/* Scroll hint — below the grid */}
+        {/* Scroll hint */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

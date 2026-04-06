@@ -3,10 +3,7 @@
 import * as Tooltip from "@radix-ui/react-tooltip";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { Badge } from "@/components/ui/Badge";
-import { profile } from "@/data/profile";
-import { allSkills } from "@/data/skills";
-
-const topSkills = allSkills.filter((s) => s.level >= 4).slice(0, 8);
+import type { Profile, Skill } from "@/types";
 
 // Sentence-level blame annotations for the bio
 const BIO_BLAMES = [
@@ -42,7 +39,12 @@ const BIO_BLAMES = [
   },
 ];
 
-export function AboutSection() {
+interface AboutSectionProps {
+  profile: Profile;
+  topSkills: Skill[];
+}
+
+export function AboutSection({ profile, topSkills }: AboutSectionProps) {
   return (
     <section id="about" className="py-24 px-4">
       <div className="max-w-3xl mx-auto">
@@ -77,7 +79,7 @@ export function AboutSection() {
 
               {/* Badges row */}
               <div className="flex flex-wrap gap-2">
-                <Badge variant="status">⚡ Available for work</Badge>
+                {profile.availableForWork && <Badge variant="status">⚡ Available for work</Badge>}
                 <Badge variant="branch">main</Badge>
                 <Badge variant="tag">B.Tech CSE</Badge>
                 <Badge variant="tag">Open Source</Badge>

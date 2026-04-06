@@ -1,20 +1,7 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import { Analytics } from "@vercel/analytics/react";
 import "@/styles/globals.css";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
 import { profile } from "@/data/profile";
-
-const CommandPalette = dynamic(
-  () => import("@/components/layout/CommandPalette").then((m) => m.CommandPalette),
-  { ssr: false }
-);
-
-const StatusBar = dynamic(
-  () => import("@/components/layout/StatusBar").then((m) => m.StatusBar),
-  { ssr: false }
-);
 
 const BASE_URL = "https://omkarjadhav.vercel.app";
 
@@ -72,19 +59,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
       <body className="relative">
-        <Navbar />
-        <CommandPalette />
-        <main className="pb-7">{children}</main>
-        <Footer />
-        <StatusBar />
+        {children}
         <Analytics />
       </body>
     </html>
