@@ -25,10 +25,18 @@ type Intent =
   | "fun"
   | "facts"
   | "commands"
+  | "follow_up"
   | "unknown";
 
-function detectIntent(input: string): Intent {
+function detectIntent(input: string, history: AIMessage[]): Intent {
   const q = input.toLowerCase();
+
+  // Detect conversational follow-ups referencing prior context
+  if (
+    history.length > 0 &&
+    /^(more|tell me more|expand|elaborate|continue|yes|yeah|and\??\s*$|what about|the (first|second|third|last) one|that one|both|all of them|go on|keep going|what else)\b/.test(q)
+  )
+    return "follow_up";
   if (/^(hi|hey|hello|howdy|sup|yo|good\s*(morning|afternoon|evening))\b/.test(q))
     return "greeting";
   if (/\bname\b/.test(q) && !/project|skill/.test(q)) return "name";
@@ -126,6 +134,63 @@ function generateResponse(intent: Intent): string {
   }
 }
 
+// Keyword → intent map used to infer topic from last assistant message
+const TOPIC_KEYWORDS: Array<{ pattern: RegExp; intent: Intent }> = [
+  { pattern: /skill|stack|tech|language|framework|proficien/i, intent: "skills" },
+  { pattern: /project|repo|built|application/i, intent: "projects" },
+  { pattern: /experience|career|job|intern|worked/i, intent: "experience" },
+  { pattern: /education|degree|college|university|cgpa/i, intent: "education" },
+  { pattern: /contact|email|hire|available|opportun/i, intent: "contact" },
+  { pattern: /fun|hobbies|interest|stash|outside/i, intent: "fun" },
+];
+
+function generateFollowUpResponse(history: AIMessage[]): string {
+  const lastAssistant = [...history].reverse().find((m) => m.role === "assistant");
+  if (!lastAssistant) {
+    return "Could you be more specific? I can go deeper on skills, projects, experience, education, or contact info.";
+  }
+
+  const content = lastAssistant.content;
+  const matched = TOPIC_KEYWORDS.find(({ pattern }) => pattern.test(content));
+
+  switch (matched?.intent) {
+    case "skills": {
+      const allSkills = skillBranches.flatMap((b) =>
+        b.skills.map((s) => `\`${s.name}\`${s.tag ? ` *(${s.tag})*` : ""}`)
+      );
+      return `Here's the full skill breakdown across all branches:\n\n${allSkills.join(" · ")}\n\nOmkar is most experienced in full-stack web development and data/ML pipelines.`;
+    }
+    case "projects": {
+      const lines = projects.map(
+        (p) =>
+          `• **${p.repoName}** \`[${p.language}]\`\n  ${p.description}\n  ★ ${p.stars}  forks: ${p.forks}  status: *${p.status}*`
+      );
+      return `Here are all of Omkar's projects with full details:\n\n${lines.join("\n\n")}`;
+    }
+    case "experience": {
+      const all = timeline.map(
+        (e) =>
+          `• **${e.title}** @ ${e.org}\n  ${e.date}${e.dateEnd ? ` → ${e.dateEnd}` : ""}`
+      );
+      return `Full experience timeline:\n\n${all.join("\n\n")}`;
+    }
+    case "education": {
+      const edu = timeline.filter((e) => e.type === "education");
+      const lines = edu.map(
+        (e) =>
+          `• **${e.title}** — ${e.org}\n  ${e.date}${e.dateEnd ? ` → ${e.dateEnd}` : ""}`
+      );
+      return `Here's Omkar's complete educational background:\n\n${lines.join("\n\n")}`;
+    }
+    case "contact":
+      return `The best ways to reach Omkar:\n\n📧 \`${profile.email}\`\n📍 ${profile.location}\n\n${profile.socials.map((s) => `• **${s.label}** — ${s.url}`).join("\n")}\n\nOr use the Contact section at the bottom of the page.`;
+    case "fun":
+      return `Here are all of Omkar's stashed interests:\n\n${(profile.stash ?? []).map((s) => `• ${s}`).join("\n")}`;
+    default:
+      return "Could you be more specific? I can go deeper on skills, projects, experience, education, or contact info.";
+  }
+}
+
 export function useAI() {
   const [messages, setMessages] = useState<AIMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -138,22 +203,30 @@ export function useAI() {
       role: "user",
       content: userInput.trim(),
     };
-    setMessages((prev) => [...prev, userMsg]);
-    setIsTyping(true);
 
-    const intent = detectIntent(userInput);
-    const response = generateResponse(intent);
-    const delay = 500 + Math.random() * 400;
+    setMessages((prev) => {
+      const updatedHistory = [...prev, userMsg];
+      setIsTyping(true);
 
-    setTimeout(() => {
-      const aiMsg: AIMessage = {
-        id: `ai-${Date.now()}`,
-        role: "assistant",
-        content: response,
-      };
-      setMessages((prev) => [...prev, aiMsg]);
-      setIsTyping(false);
-    }, delay);
+      const intent = detectIntent(userInput, prev);
+      const response =
+        intent === "follow_up"
+          ? generateFollowUpResponse(prev)
+          : generateResponse(intent);
+      const delay = 500 + Math.random() * 400;
+
+      setTimeout(() => {
+        const aiMsg: AIMessage = {
+          id: `ai-${Date.now()}`,
+          role: "assistant",
+          content: response,
+        };
+        setMessages((current) => [...current, aiMsg]);
+        setIsTyping(false);
+      }, delay);
+
+      return updatedHistory;
+    });
   }, []);
 
   const clearChat = useCallback(() => setMessages([]), []);

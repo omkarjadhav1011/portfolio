@@ -130,7 +130,8 @@ export function CommandPalette() {
   const { messages, isTyping, ask, clearChat } = useAI();
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const terminalBottomRef = useRef<HTMLDivElement>(null);
+  const aiBottomRef = useRef<HTMLDivElement>(null);
   const [localInput, setLocalInput] = useState("");
 
   // Global keyboard handler — uses getState() to avoid stale closure
@@ -145,10 +146,17 @@ export function CommandPalette() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Auto-scroll to latest content
+  // Auto-scroll — each panel has its own ref, gated by active mode to prevent
+  // cross-panel scroll during AnimatePresence exit transitions
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [history, messages, isTyping]);
+    if (mode === "terminal")
+      terminalBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [history, mode]);
+
+  useEffect(() => {
+    if (mode === "ai")
+      aiBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping, mode]);
 
   // Focus input when opened or mode changes
   useEffect(() => {
@@ -186,12 +194,12 @@ export function CommandPalette() {
     [localInput, mode, submit, ask, navigateHistory]
   );
 
-  function handleSend() {
+  const handleSend = useCallback(() => {
     const val = localInput.trim();
     if (!val || isTyping) return;
     ask(val);
     setLocalInput("");
-  }
+  }, [localInput, isTyping, ask]);
 
   function handlePromptClick(prompt: string) {
     ask(prompt);
@@ -354,7 +362,7 @@ export function CommandPalette() {
                             ))}
                           </div>
                         ))}
-                        <div ref={bottomRef} />
+                        <div ref={terminalBottomRef} />
                       </motion.div>
                     ) : (
                       <motion.div
@@ -393,7 +401,7 @@ export function CommandPalette() {
                               <AIBubble key={msg.id} message={msg} />
                             ))}
                             {isTyping && <TypingIndicator />}
-                            <div ref={bottomRef} />
+                            <div ref={aiBottomRef} />
                           </div>
                         )}
                       </motion.div>

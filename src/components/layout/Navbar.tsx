@@ -121,6 +121,17 @@ export function Navbar() {
             exit={{ opacity: 0, y: -16 }}
             className="fixed top-14 left-0 right-0 z-40 bg-terminal-bg border-b border-terminal-border p-4 font-mono space-y-1 md:hidden"
           >
+            {/* AI trigger */}
+            <button
+              onClick={() => { openInMode("ai"); setMobileOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-git-green bg-git-green/5 border border-git-green/20 hover:bg-git-green/10 transition-colors cursor-pointer"
+            >
+              <Sparkles size={14} className="text-git-green/70" />
+              <span>Ask AI about this developer</span>
+            </button>
+
+            <div className="border-t border-terminal-border my-1" />
+
             {NAV_SECTIONS.map((s) => (
               <button
                 key={s.id}
