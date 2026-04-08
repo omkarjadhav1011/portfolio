@@ -14,10 +14,10 @@ function scrollToSection(id: string) {
 }
 
 interface ParsedCommand {
-  base: string;       // e.g. "git", "ls", "whoami"
-  sub: string;        // e.g. "checkout", "log", "branch"
-  args: string[];     // remaining tokens
-  flags: string[];    // tokens starting with "-"
+  base: string;
+  sub: string;
+  args: string[];
+  flags: string[];
   raw: string;
 }
 
@@ -33,7 +33,6 @@ function parseCommand(raw: string): ParsedCommand {
 
 export function useTerminal() {
   const [history, setHistory] = useState<Array<{ command: string; result: CommandResult }>>([]);
-  const [input, setInput] = useState("");
   const [historyIndex, setHistoryIndex] = useState(-1);
 
   const executeCommand = useCallback((raw: string): CommandResult => {
@@ -72,7 +71,8 @@ export function useTerminal() {
           "    git stash pop           — unstash my interests",
           "    clear                   — clear terminal",
           "",
-          "  Tip: use ↑ / ↓ to navigate command history",
+          "  Tip: use / to ask the AI assistant anything",
+          "  Tip: use Arrow Up/Down to navigate history",
         ],
         type: "success",
       };
@@ -117,10 +117,10 @@ export function useTerminal() {
       setTimeout(() => scrollToSection("skills"), 100);
       const lines: string[] = ["Skills by branch:", ""];
       for (const branch of skillBranches) {
-        lines.push(`  ⑂ ${branch.branchName}`);
+        lines.push(`  branch: ${branch.branchName}`);
         for (const skill of branch.skills) {
           const bar = "█".repeat(skill.level) + "░".repeat(5 - skill.level);
-          lines.push(`      ${bar}  ${skill.name}${skill.tag ? ` (${skill.tag})` : ""}`);
+          lines.push(`    ${bar}  ${skill.name}${skill.tag ? ` (${skill.tag})` : ""}`);
         }
         lines.push("");
       }
@@ -132,9 +132,9 @@ export function useTerminal() {
       setTimeout(() => scrollToSection("projects"), 100);
       const lines: string[] = ["Pinned repositories:", ""];
       for (const p of projects) {
-        lines.push(`  📁 ${p.repoName}  [${p.language}]`);
+        lines.push(`  repo: ${p.repoName}  [${p.language}]`);
         lines.push(`     ${p.description}`);
-        lines.push(`     ★ ${p.stars}  ⑂ ${p.forks}  ● ${p.status}`);
+        lines.push(`     * ${p.stars}  forks: ${p.forks}  status: ${p.status}`);
         lines.push("");
       }
       return { output: lines, type: "success" };
@@ -281,6 +281,7 @@ export function useTerminal() {
         `command not found: ${cmd.base}`,
         "",
         "Type 'help' to see available commands.",
+        "Tip: Switch to Ask AI tab for natural language queries.",
       ],
       type: "error",
     };
@@ -292,27 +293,27 @@ export function useTerminal() {
       if (command.trim().toLowerCase() !== "clear") {
         setHistory((prev) => [...prev, { command, result }]);
       }
-      setInput("");
       setHistoryIndex(-1);
     },
     [executeCommand]
   );
 
+  // Returns the command string for the given direction — caller sets input
   const navigateHistory = useCallback(
-    (direction: "up" | "down") => {
+    (direction: "up" | "down"): string => {
       const commands = history.map((h) => h.command).reverse();
       if (direction === "up") {
         const nextIndex = Math.min(historyIndex + 1, commands.length - 1);
         setHistoryIndex(nextIndex);
-        setInput(commands[nextIndex] ?? "");
+        return commands[nextIndex] ?? "";
       } else {
         const nextIndex = Math.max(historyIndex - 1, -1);
         setHistoryIndex(nextIndex);
-        setInput(nextIndex === -1 ? "" : (commands[nextIndex] ?? ""));
+        return nextIndex === -1 ? "" : (commands[nextIndex] ?? "");
       }
     },
     [history, historyIndex]
   );
 
-  return { history, input, setInput, submit, navigateHistory };
+  return { history, submit, navigateHistory };
 }

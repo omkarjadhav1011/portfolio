@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles } from "lucide-react";
 import { useScrollProgress } from "@/hooks/useScrollProgress";
+import { useCommandPaletteStore } from "@/store/commandPalette";
 import { profile } from "@/data/profile";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +23,7 @@ function scrollTo(id: string) {
 export function Navbar() {
   const { progress, activeSection } = useScrollProgress();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { openInMode } = useCommandPaletteStore();
 
   return (
     <>
@@ -67,18 +70,37 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* Ctrl+K hint + mobile toggle */}
+          {/* AI trigger + mobile toggle */}
           <div className="flex items-center gap-3">
-            <span className="hidden lg:flex items-center gap-1 px-2 py-1 rounded border border-terminal-border text-text-faint font-mono text-xs">
-              <kbd>Ctrl</kbd>
-              <span>+</span>
-              <kbd>K</kbd>
-            </span>
+            {/* Prominent clickable AI trigger — opens palette in AI mode */}
+            <button
+              onClick={() => openInMode("ai")}
+              className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-terminal-border bg-terminal-surface hover:border-git-green/50 hover:bg-git-green/5 text-text-faint hover:text-text-muted text-xs font-mono transition-all duration-200 group cursor-pointer"
+              aria-label="Open AI assistant (Ctrl+K)"
+            >
+              <Sparkles
+                size={12}
+                className="text-git-green/50 group-hover:text-git-green transition-colors shrink-0"
+              />
+              <span className="hidden lg:block text-text-faint group-hover:text-text-muted transition-colors">
+                Ask me anything...
+              </span>
+              <div className="hidden lg:flex items-center gap-0.5 ml-0.5 opacity-50 group-hover:opacity-70 transition-opacity">
+                <kbd className="px-1 py-0.5 rounded text-2xs bg-terminal-bg border border-terminal-border leading-none">
+                  Ctrl
+                </kbd>
+                <span className="text-2xs">+</span>
+                <kbd className="px-1 py-0.5 rounded text-2xs bg-terminal-bg border border-terminal-border leading-none">
+                  K
+                </kbd>
+              </div>
+            </button>
 
             {/* Mobile hamburger */}
             <button
-              className="md:hidden text-text-muted hover:text-text-primary transition-colors p-1"
+              className="md:hidden text-text-muted hover:text-text-primary transition-colors p-1 cursor-pointer"
               onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle mobile menu"
             >
               <div className="space-y-1 w-5">
                 <span className={cn("block h-px bg-current transition-all", mobileOpen && "rotate-45 translate-y-1.5")} />
