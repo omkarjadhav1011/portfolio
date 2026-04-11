@@ -1,3 +1,5 @@
+import { profile } from "@/data/profile";
+
 // Deterministic seeded RNG — same output every render/build
 function seededRandom(seed: number): number {
   const x = Math.sin(seed + 1) * 10000;
@@ -6,6 +8,7 @@ function seededRandom(seed: number): number {
 
 const WEEKS = 52;
 const DAYS = 7;
+const MOBILE_WEEKS = 16;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -19,6 +22,25 @@ const cells = Array.from({ length: WEEKS * DAYS }, (_, i) => {
   return 4;
 });
 
+// Last 16 weeks of cells for mobile compact view
+const mobileCells = cells.slice((WEEKS - MOBILE_WEEKS) * DAYS);
+
+// Derived stats
+const totalActive = cells.filter((c) => c > 0).length;
+
+function computeLongestStreak(arr: number[]): number {
+  let max = 0;
+  let cur = 0;
+  for (const v of arr) {
+    if (v > 0) { cur++; max = Math.max(max, cur); }
+    else cur = 0;
+  }
+  return max;
+}
+
+const streak = computeLongestStreak(cells);
+const activeWeeks = Math.round(totalActive / 5); // approx working days
+
 const LEVEL_CLASSES = [
   "bg-terminal-surface",
   "bg-git-green/20",
@@ -30,11 +52,100 @@ const LEVEL_CLASSES = [
 // Place month labels at week indices where month changes (approximate)
 const MONTH_POSITIONS = [0, 4, 8, 13, 17, 22, 26, 30, 35, 39, 43, 48];
 
+// Mobile: last 4 months in the 16-week window
+const MOBILE_MONTH_POSITIONS = [0, 4, 8, 12];
+const mobileMonthLabels = ["Sep", "Oct", "Nov", "Dec"];
+
+const STATS = [
+  { label: "contributions", value: totalActive },
+  { label: "day streak",    value: streak },
+  { label: "active weeks",  value: activeWeeks },
+];
+
 export function ContributionHeatmap() {
   return (
     <div className="py-8 px-4">
       <div className="max-w-5xl mx-auto">
-        <div className="overflow-x-auto pb-2">
+        {/* Section header */}
+        <div className="flex items-center gap-3 mb-4 font-mono text-xs text-text-muted overflow-hidden">
+          <span className="text-git-green shrink-0">$</span>
+          <span className="truncate">
+            git log --stat --since=&quot;1 year ago&quot; --author=&quot;{profile.handle}&quot;
+          </span>
+        </div>
+
+        {/* ── MOBILE layout (< md) ─────────────────────────────────── */}
+        <div className="block md:hidden space-y-4">
+          {/* Stat cards */}
+          <div className="grid grid-cols-3 gap-2">
+            {STATS.map(({ label, value }) => (
+              <div
+                key={label}
+                className="flex flex-col items-center py-3 px-2 rounded-xl border border-terminal-border bg-terminal-surface"
+              >
+                <span className="text-xl font-bold font-mono text-git-green leading-none mb-1">
+                  {value}
+                </span>
+                <span className="text-[10px] font-mono text-text-faint text-center leading-tight">
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* 16-week compact heatmap */}
+          <div className="rounded-xl border border-terminal-border bg-terminal-surface p-3">
+            {/* Month labels */}
+            <div
+              className="mb-1 text-[9px] font-mono text-text-faint"
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${MOBILE_WEEKS}, minmax(0, 1fr))`,
+                gap: "2px",
+              }}
+            >
+              {Array.from({ length: MOBILE_WEEKS }, (_, w) => {
+                const idx = MOBILE_MONTH_POSITIONS.indexOf(w);
+                return (
+                  <span key={w} className="overflow-hidden whitespace-nowrap">
+                    {idx >= 0 ? mobileMonthLabels[idx] : ""}
+                  </span>
+                );
+              })}
+            </div>
+
+            {/* Cell grid */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${MOBILE_WEEKS}, minmax(0, 1fr))`,
+                gridTemplateRows: `repeat(${DAYS}, minmax(0, 1fr))`,
+                gridAutoFlow: "column",
+                gap: "3px",
+              }}
+            >
+              {mobileCells.map((level, i) => (
+                <div
+                  key={i}
+                  title={`Activity level ${level}`}
+                  className={`w-full aspect-square rounded-sm ${LEVEL_CLASSES[level]}`}
+                />
+              ))}
+            </div>
+
+            {/* Legend */}
+            <div className="mt-2.5 flex items-center justify-end gap-1 text-[9px] font-mono text-text-faint">
+              <span>Less</span>
+              {LEVEL_CLASSES.map((cls, i) => (
+                <div key={i} className={`w-2.5 h-2.5 rounded-sm ${cls}`} />
+              ))}
+              <span>More</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── DESKTOP layout (≥ md) ────────────────────────────────── */}
+        <div className="hidden md:block overflow-x-auto pb-2">
           {/* Month labels */}
           <div
             className="mb-1 text-[10px] font-mono text-text-faint"
