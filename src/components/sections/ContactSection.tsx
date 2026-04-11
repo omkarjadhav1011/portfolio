@@ -24,7 +24,7 @@ export function ContactSection() {
   }
 
   return (
-    <section id="contact" className="py-24 px-4">
+    <section id="contact" className="py-16 sm:py-24 px-4 scroll-mt-14">
       <div className="max-w-2xl mx-auto">
         <ScrollReveal>
           <div className="flex items-center gap-3 mb-4">
@@ -33,7 +33,7 @@ export function ContactSection() {
               git remote add origin — contact me
             </span>
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold font-mono text-text-primary mb-2">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-mono text-text-primary mb-2">
             Get in Touch
           </h2>
           <p className="text-text-muted text-sm font-mono mb-10">
@@ -95,7 +95,7 @@ export function ContactSection() {
                 <button
                   type="submit"
                   disabled={state.status === "loading" || state.status === "success"}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-git-green/40 bg-git-green/10 text-git-green font-mono text-sm hover:bg-git-green/20 hover:border-git-green/70 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  className="w-full flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg border border-git-green/40 bg-git-green/10 text-git-green font-mono text-xs sm:text-sm hover:bg-git-green/20 hover:border-git-green/70 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 overflow-hidden"
                 >
                   {state.status === "loading" ? (
                     <>
@@ -107,7 +107,7 @@ export function ContactSection() {
                   ) : (
                     <>
                       <span className="text-text-muted">$</span>
-                      <span>git send-email --to={`"${profile.handle}"`}</span>
+                      <span className="truncate">git send-email --to={`"${profile.handle}"`}</span>
                     </>
                   )}
                 </button>

@@ -47,7 +47,7 @@ interface AboutSectionProps {
 
 export function AboutSection({ profile, topSkills }: AboutSectionProps) {
   return (
-    <section id="about" className="py-24 px-4">
+    <section id="about" className="py-16 sm:py-24 px-4 scroll-mt-14">
       <div className="max-w-3xl mx-auto">
         <ScrollReveal>
           {/* Section header */}
@@ -69,10 +69,10 @@ export function AboutSection({ profile, topSkills }: AboutSectionProps) {
             </div>
 
             {/* README body */}
-            <div className="p-6 md:p-8 space-y-6 font-mono">
+            <div className="p-4 sm:p-6 md:p-8 space-y-6 font-mono">
               {/* H1 */}
               <div>
-                <h2 className="text-2xl md:text-3xl font-bold text-text-primary mb-1">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-text-primary mb-1">
                   {profile.name}
                 </h2>
                 <p className="text-git-green text-sm">{profile.headline}</p>

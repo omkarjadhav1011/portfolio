@@ -43,7 +43,7 @@ export function ExperienceSection({ timeline }: ExperienceSectionProps) {
   );
 
   return (
-    <section id="experience" className="py-24 px-4 bg-terminal-surface/30">
+    <section id="experience" className="py-16 sm:py-24 px-4 scroll-mt-14 bg-terminal-surface/30">
       <div className="max-w-3xl mx-auto">
         <ScrollReveal>
           <div className="flex items-center gap-3 mb-4">
@@ -52,7 +52,7 @@ export function ExperienceSection({ timeline }: ExperienceSectionProps) {
               git log --graph --all --pretty=format:&quot;%h %s&quot;
             </span>
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold font-mono text-text-primary mb-2">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-mono text-text-primary mb-2">
             Experience & Education
           </h2>
           <p className="text-text-muted text-sm font-mono mb-12">
@@ -87,7 +87,7 @@ function CommitEntry({
   return (
     <div ref={ref} className="relative flex gap-0">
       {/* Left: graph rail */}
-      <div className="flex flex-col items-center mr-4 w-8 shrink-0">
+      <div className="flex flex-col items-center mr-3 sm:mr-4 w-6 sm:w-8 shrink-0">
         {/* Vertical line above */}
         {index > 0 && (
           <motion.div
@@ -145,7 +145,7 @@ function CommitEntry({
         </div>
 
         {/* Commit card */}
-        <div className="rounded-xl border border-terminal-border bg-terminal-surface p-5 hover:border-terminal-border/80 transition-colors">
+        <div className="rounded-xl border border-terminal-border bg-terminal-surface p-3 sm:p-5 hover:border-terminal-border/80 transition-colors">
           <div className="flex items-start gap-3 mb-3">
             {(() => { const Icon = TYPE_ICON_MAP[entry.type] ?? Folder; return <Icon size={18} className={cn("shrink-0 mt-0.5", colors.text)} />; })()}
             <div>
@@ -161,7 +161,7 @@ function CommitEntry({
           {/* Commit body — bullet points */}
           <ul className="space-y-1.5 mb-4 font-mono">
             {entry.description.map((line, li) => (
-              <li key={li} className="flex gap-2 text-sm text-text-secondary">
+              <li key={li} className="flex gap-2 text-xs sm:text-sm text-text-secondary">
                 <span className="text-text-faint shrink-0">│</span>
                 <span>{line}</span>
               </li>

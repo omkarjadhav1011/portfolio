@@ -28,7 +28,7 @@ export function ProjectsSection({ projects, githubUrl }: ProjectsSectionProps) {
       : projects.filter((p) => p.status === activeFilter);
 
   return (
-    <section id="projects" className="py-24 px-4">
+    <section id="projects" className="py-16 sm:py-24 px-4 scroll-mt-14">
       <div className="max-w-5xl mx-auto">
         <ScrollReveal>
           <div className="flex items-center gap-3 mb-4">
@@ -37,7 +37,7 @@ export function ProjectsSection({ projects, githubUrl }: ProjectsSectionProps) {
               git ls-remote --heads
             </span>
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold font-mono text-text-primary mb-2">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-mono text-text-primary mb-2">
             Projects
           </h2>
           <p className="text-text-muted text-sm font-mono mb-8">
@@ -48,13 +48,13 @@ export function ProjectsSection({ projects, githubUrl }: ProjectsSectionProps) {
 
         {/* Filter bar */}
         <ScrollReveal delay={0.1}>
-          <div className="flex flex-wrap gap-2 mb-8 p-3 rounded-xl border border-terminal-border bg-terminal-surface font-mono text-xs">
+          <div className="flex flex-wrap gap-2 mb-8 p-2 sm:p-3 rounded-xl border border-terminal-border bg-terminal-surface font-mono text-xs">
             <span className="text-text-muted self-center mr-1">filter:</span>
             {FILTERS.map((f) => (
               <button
                 key={f.value}
                 onClick={() => setActiveFilter(f.value)}
-                className={`px-3 py-1.5 rounded-lg border transition-all duration-200 cursor-pointer ${
+                className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border transition-all duration-200 cursor-pointer ${
                   activeFilter === f.value
                     ? "border-git-green/60 bg-git-green/10 text-git-green"
                     : "border-terminal-border text-text-muted hover:border-terminal-border/80 hover:text-text-secondary"
