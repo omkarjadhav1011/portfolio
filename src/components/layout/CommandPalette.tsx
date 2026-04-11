@@ -229,12 +229,13 @@ export function CommandPalette() {
 
             {/* Panel */}
             <Dialog.Content asChild>
+              {/* Positioning wrapper — static div so Framer Motion transform doesn't break centering */}
+              <div className="fixed top-[10%] sm:top-[14%] inset-x-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-full sm:max-w-2xl sm:px-4 z-50">
               <motion.div
                 initial={{ opacity: 0, scale: 0.96, y: -16 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: -16 }}
                 transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                className="fixed top-[14%] left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4"
               >
                 <div className="rounded-xl overflow-hidden shadow-terminal border border-terminal-border bg-terminal-window font-mono">
 
@@ -382,7 +383,7 @@ export function CommandPalette() {
                                 Ask me anything about this developer:
                               </p>
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {AI_PROMPTS.map((prompt) => (
                                 <button
                                   key={prompt}
@@ -462,6 +463,7 @@ export function CommandPalette() {
                   </div>
                 </div>
               </motion.div>
+              </div>
             </Dialog.Content>
           </Dialog.Portal>
         )}

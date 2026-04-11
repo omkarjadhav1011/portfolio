@@ -34,7 +34,7 @@ export function ContributionHeatmap() {
   return (
     <div className="py-8 px-4">
       <div className="max-w-5xl mx-auto">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto pb-2">
           {/* Month labels */}
           <div
             className="mb-1 text-[10px] font-mono text-text-faint"

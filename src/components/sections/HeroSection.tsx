@@ -29,7 +29,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex flex-col items-center justify-center px-4 py-14 sm:py-20 overflow-hidden"
+      className="relative min-h-[85vh] md:min-h-screen flex flex-col items-center justify-center px-4 py-14 sm:py-20 overflow-hidden"
     >
       {/* Subtle grid background */}
       <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-40 pointer-events-none" />
@@ -39,7 +39,8 @@ export function HeroSection({ profile }: HeroSectionProps) {
       <div className="relative w-full max-w-5xl mx-auto">
         {/* Two-column layout: terminal left, name right */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center">
-          {/* Left column: terminal boot sequence */}
+          {/* Left column: terminal boot sequence — hidden on mobile */}
+          <div className="hidden md:block">
           <TerminalWindow
             title={`${profile.handle}@portfolio: ~`}
             className="w-full"
@@ -55,6 +56,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
               }}
             />
           </TerminalWindow>
+          </div>
 
           {/* Right column: name and CTAs */}
           <motion.div
@@ -92,7 +94,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="flex flex-wrap justify-center md:justify-start gap-2 sm:gap-3 pt-2"
+              className="flex flex-col sm:flex-row flex-wrap justify-center md:justify-start gap-2 sm:gap-3 pt-2"
             >
               <a
                 href="#projects"
@@ -100,7 +102,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
                   e.preventDefault();
                   document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="group flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg border border-git-blue/40 bg-git-blue/10 text-git-blue text-xs sm:text-sm font-mono hover:bg-git-blue/20 hover:border-git-blue/70 transition-all duration-200"
+                className="group flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto px-3 sm:px-4 py-2 rounded-lg border border-git-blue/40 bg-git-blue/10 text-git-blue text-xs sm:text-sm font-mono hover:bg-git-blue/20 hover:border-git-blue/70 transition-all duration-200"
               >
                 <span className="text-text-muted">$</span>
                 git checkout projects
@@ -111,7 +113,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
                   e.preventDefault();
                   document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg border border-git-green/40 bg-git-green/10 text-git-green text-xs sm:text-sm font-mono hover:bg-git-green/20 hover:border-git-green/70 transition-all duration-200"
+                className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto px-3 sm:px-4 py-2 rounded-lg border border-git-green/40 bg-git-green/10 text-git-green text-xs sm:text-sm font-mono hover:bg-git-green/20 hover:border-git-green/70 transition-all duration-200"
               >
                 <span className="text-text-muted">$</span>
                 git show --contact
@@ -121,7 +123,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
                 download
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg border border-git-purple/40 bg-git-purple/10 text-git-purple text-xs sm:text-sm font-mono hover:bg-git-purple/20 hover:border-git-purple/70 transition-all duration-200"
+                className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto px-3 sm:px-4 py-2 rounded-lg border border-git-purple/40 bg-git-purple/10 text-git-purple text-xs sm:text-sm font-mono hover:bg-git-purple/20 hover:border-git-purple/70 transition-all duration-200"
               >
                 <span className="text-text-muted">$</span>
                 git export --resume
