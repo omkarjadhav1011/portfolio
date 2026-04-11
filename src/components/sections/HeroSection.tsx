@@ -29,7 +29,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
   return (
     <section
       id="hero"
-      className="relative min-h-[85vh] md:min-h-screen flex flex-col items-center justify-center px-4 py-14 sm:py-20 overflow-hidden"
+      className="relative min-h-screen flex flex-col items-center justify-center px-4 py-14 sm:py-20 overflow-hidden"
     >
       {/* Subtle grid background */}
       <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-40 pointer-events-none" />
@@ -39,23 +39,53 @@ export function HeroSection({ profile }: HeroSectionProps) {
       <div className="relative w-full max-w-5xl mx-auto">
         {/* Two-column layout: terminal left, name right */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center">
-          {/* Left column: terminal boot sequence — hidden on mobile */}
-          <div className="hidden md:block">
-          <TerminalWindow
-            title={`${profile.handle}@portfolio: ~`}
-            className="w-full"
-          >
-            <TypewriterText
-              lines={bootLines}
-              startDelay={800}
-              lineColors={{
-                0: "text-git-green",
-                5: "text-git-green",
-                6: "text-git-green",
-                8: "text-git-green",
-              }}
-            />
-          </TerminalWindow>
+          {/* Left column: terminal — compact static on mobile, full animated on desktop */}
+          <div>
+            {/* Mobile: compact static 3-line terminal */}
+            <div className="block md:hidden">
+              <TerminalWindow
+                title={`${profile.handle}@portfolio: ~`}
+                className="w-full"
+              >
+                <div className="space-y-1.5 font-mono text-sm">
+                  <div className="flex gap-2">
+                    <span className="text-git-green shrink-0">$</span>
+                    <span className="text-text-muted break-all">
+                      git clone github.com/{profile.handle}/portfolio
+                    </span>
+                  </div>
+                  <div className="pl-5 text-text-faint text-xs">
+                    Cloning into &apos;portfolio&apos;... done.
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-git-green shrink-0">$</span>
+                    <span className="text-text-muted">cat README.md</span>
+                  </div>
+                  <div className="pl-5">
+                    <span className="inline-block w-2 h-4 bg-git-green animate-cursor-blink align-text-bottom" />
+                  </div>
+                </div>
+              </TerminalWindow>
+            </div>
+
+            {/* Desktop: full animated boot sequence */}
+            <div className="hidden md:block">
+              <TerminalWindow
+                title={`${profile.handle}@portfolio: ~`}
+                className="w-full"
+              >
+                <TypewriterText
+                  lines={bootLines}
+                  startDelay={800}
+                  lineColors={{
+                    0: "text-git-green",
+                    5: "text-git-green",
+                    6: "text-git-green",
+                    8: "text-git-green",
+                  }}
+                />
+              </TerminalWindow>
+            </div>
           </div>
 
           {/* Right column: name and CTAs */}
