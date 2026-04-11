@@ -52,9 +52,13 @@ const LEVEL_CLASSES = [
 // Place month labels at week indices where month changes (approximate)
 const MONTH_POSITIONS = [0, 4, 8, 13, 17, 22, 26, 30, 35, 39, 43, 48];
 
-// Mobile: last 4 months in the 16-week window
+// Mobile: compute last 4 months dynamically based on current date
+const now = new Date();
+const mobileMonthLabels = Array.from({ length: 4 }, (_, i) => {
+  const d = new Date(now.getFullYear(), now.getMonth() - (3 - i), 1);
+  return MONTHS[d.getMonth()];
+});
 const MOBILE_MONTH_POSITIONS = [0, 4, 8, 12];
-const mobileMonthLabels = ["Sep", "Oct", "Nov", "Dec"];
 
 const STATS = [
   { label: "contributions", value: totalActive },

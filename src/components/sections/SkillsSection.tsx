@@ -6,7 +6,7 @@ import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { skillLevelLabel } from "@/lib/utils";
 import type { Skill, SkillBranch } from "@/types";
 
-const BRANCH_COLORS = ["#58a6ff", "#00ff88", "#f0883e", "#d2a8ff"];
+// Colors now come from branch.color prop — no hardcoded fallback needed
 
 interface SkillNodeProps {
   skill: Skill;
@@ -145,7 +145,7 @@ export function SkillsSection({ skillBranches }: SkillsSectionProps) {
                       <SkillNode
                         key={skill.name}
                         skill={skill}
-                        color={BRANCH_COLORS[bi] ?? branch.color}
+                        color={branch.color}
                         index={bi * 10 + si}
                         isHovered={hoveredSkill === skill.name}
                         onHover={() => setHoveredSkill(skill.name)}

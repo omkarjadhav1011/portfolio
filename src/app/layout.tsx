@@ -3,7 +3,7 @@ import { Analytics } from "@vercel/analytics/react";
 import "@/styles/globals.css";
 import { profile } from "@/data/profile";
 
-const BASE_URL = "https://omkarjadhav.vercel.app";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://omkarjadhav.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),

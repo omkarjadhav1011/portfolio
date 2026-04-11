@@ -1,14 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { signJwt, comparePassword } from "@/lib/auth";
+
+const loginSchema = z.object({
+  username: z.string().min(1).max(100),
+  password: z.string().min(1).max(200),
+});
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, password } = body as { username: string; password: string };
+    const parsed = loginSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+
+    const { username, password } = parsed.data;
 
     if (
-      !username ||
-      !password ||
       username !== process.env.ADMIN_USERNAME ||
       !(await comparePassword(password, process.env.ADMIN_PASSWORD_HASH!))
     ) {

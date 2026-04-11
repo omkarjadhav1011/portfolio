@@ -87,7 +87,7 @@ export default async function AdminDashboard() {
         <div className="mt-2 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-git-blue" />
           <span className="text-text-secondary text-xs">
-            {stats.projects} project(s) · {stats.experience} experience entrie(s) · {stats.skills} skill(s) in {stats.branches} branch(es)
+            {stats.projects} project(s) · {stats.experience} experience entry/entries · {stats.skills} skill(s) in {stats.branches} branch(es)
           </span>
         </div>
       </div>
