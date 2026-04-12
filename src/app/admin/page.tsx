@@ -41,7 +41,7 @@ export default async function AdminDashboard() {
           <Link
             key={card.label}
             href={card.href}
-            className={`rounded-xl border ${card.border} ${card.bg} p-4 hover:scale-[1.02] transition-transform`}
+            className={`rounded-xl border ${card.border} ${card.bg} p-4 hover:shadow-card-hover hover:border-git-green/30 transition-all duration-200`}
           >
             <div className={`text-3xl font-bold ${card.color}`}>{card.value}</div>
             <div className="text-text-muted text-xs mt-1">{card.label}</div>

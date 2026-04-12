@@ -2,15 +2,26 @@
 
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ExternalLink, Copy, Check } from "lucide-react";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { TerminalWindow } from "@/components/ui/TerminalWindow";
 import { sendContactEmail } from "@/app/actions/contact";
+import { copyToClipboard } from "@/lib/clipboard";
 import { profile } from "@/data/profile";
 import type { ContactFormState } from "@/types";
 
 export function ContactSection() {
   const [state, setState] = useState<ContactFormState>({ status: "idle" });
+  const [copiedEmail, setCopiedEmail] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  async function handleCopyEmail() {
+    const ok = await copyToClipboard(profile.email);
+    if (ok) {
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 2000);
+    }
+  }
 
   async function handleSubmit(formData: FormData) {
     setState({ status: "loading" });
@@ -139,7 +150,25 @@ export function ContactSection() {
 
             {/* Direct links */}
             <div className="mt-8 pt-6 border-t border-terminal-border space-y-2 font-mono text-sm">
-              <p className="text-text-muted text-xs mb-3"># or reach me directly:</p>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-text-muted text-xs"># or reach me directly:</p>
+                <button
+                  onClick={handleCopyEmail}
+                  className="flex items-center gap-1.5 px-2 py-1 rounded text-xs text-text-faint hover:text-text-muted hover:bg-terminal-border/30 transition-colors"
+                >
+                  {copiedEmail ? (
+                    <>
+                      <Check size={12} className="text-git-green" />
+                      <span className="text-git-green">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={12} />
+                      <span>Copy email</span>
+                    </>
+                  )}
+                </button>
+              </div>
               {profile.socials.map((s) => (
                 <a
                   key={s.label}
@@ -150,6 +179,7 @@ export function ContactSection() {
                 >
                   <span className="text-git-green">→</span>
                   {s.label}
+                  <ExternalLink size={10} className="opacity-40" />
                 </a>
               ))}
             </div>

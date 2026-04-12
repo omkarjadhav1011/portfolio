@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { FileText, MapPin, Zap } from "lucide-react";
+import { FileText, MapPin, Zap, Copy, Check, ExternalLink } from "lucide-react";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { Badge } from "@/components/ui/Badge";
+import { copyToClipboard } from "@/lib/clipboard";
 import type { Profile, Skill } from "@/types";
 
 // Sentence-level blame annotations for the bio
@@ -46,6 +48,16 @@ interface AboutSectionProps {
 }
 
 export function AboutSection({ profile, topSkills }: AboutSectionProps) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopyEmail() {
+    const ok = await copyToClipboard(profile.email);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
   return (
     <section id="about" className="py-16 sm:py-24 px-4 scroll-mt-14">
       <div className="max-w-3xl mx-auto">
@@ -180,15 +192,29 @@ export function AboutSection({ profile, topSkills }: AboutSectionProps) {
                     >
                       <span className="text-git-blue">→</span>
                       {social.label}
+                      <ExternalLink size={10} className="opacity-40" />
                     </a>
                   ))}
-                  <a
-                    href={`mailto:${profile.email}`}
-                    className="flex items-center gap-1.5 text-sm text-text-muted hover:text-git-green transition-colors cursor-pointer"
-                  >
-                    <span className="text-git-green">→</span>
-                    Email
-                  </a>
+                  <span className="flex items-center gap-1.5 text-sm text-text-muted">
+                    <a
+                      href={`mailto:${profile.email}`}
+                      className="flex items-center gap-1.5 hover:text-git-green transition-colors cursor-pointer"
+                    >
+                      <span className="text-git-green">→</span>
+                      Email
+                    </a>
+                    <button
+                      onClick={handleCopyEmail}
+                      className="p-1 rounded hover:bg-terminal-border/30 transition-colors"
+                      title="Copy email"
+                    >
+                      {copied ? (
+                        <Check size={12} className="text-git-green" />
+                      ) : (
+                        <Copy size={12} className="opacity-40 hover:opacity-100" />
+                      )}
+                    </button>
+                  </span>
                 </div>
               </div>
             </div>

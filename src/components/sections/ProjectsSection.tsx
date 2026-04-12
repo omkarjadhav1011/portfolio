@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { SearchX, ExternalLink } from "lucide-react";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { RepoCard } from "@/components/ui/RepoCard";
+import { EmptyState } from "@/components/ui/EmptyState";
 import type { Project } from "@/types";
 
 type Filter = "all" | "active" | "archived" | "wip";
@@ -74,10 +76,11 @@ export function ProjectsSection({ projects, githubUrl }: ProjectsSectionProps) {
         </div>
 
         {filtered.length === 0 && (
-          <div className="text-center py-16 font-mono text-text-faint">
-            <p className="text-git-orange">warning: no objects found matching filter</p>
-            <p className="text-sm mt-2">try a different filter</p>
-          </div>
+          <EmptyState
+            icon={<SearchX size={32} />}
+            title="warning: no objects found matching filter"
+            description="try a different filter or view all repositories"
+          />
         )}
 
         {/* More on GitHub link */}
@@ -91,6 +94,7 @@ export function ProjectsSection({ projects, githubUrl }: ProjectsSectionProps) {
             >
               <span className="text-git-green">→</span>
               View all repositories on GitHub
+              <ExternalLink size={12} className="opacity-40" />
             </a>
           </div>
         </ScrollReveal>

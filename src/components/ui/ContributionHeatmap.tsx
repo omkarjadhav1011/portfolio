@@ -1,3 +1,7 @@
+"use client";
+
+import * as Tooltip from "@radix-ui/react-tooltip";
+import { motion } from "framer-motion";
 import { profile } from "@/data/profile";
 
 // Deterministic seeded RNG — same output every render/build
@@ -11,6 +15,7 @@ const DAYS = 7;
 const MOBILE_WEEKS = 16;
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 // Generate 364 cells (52 weeks × 7 days) with activity level 0–4
 const cells = Array.from({ length: WEEKS * DAYS }, (_, i) => {
@@ -39,7 +44,7 @@ function computeLongestStreak(arr: number[]): number {
 }
 
 const streak = computeLongestStreak(cells);
-const activeWeeks = Math.round(totalActive / 5); // approx working days
+const activeWeeks = Math.round(totalActive / 5);
 
 const LEVEL_CLASSES = [
   "bg-terminal-surface",
@@ -66,138 +71,200 @@ const STATS = [
   { label: "active weeks",  value: activeWeeks },
 ];
 
+// Generate fake dates working backward from today for tooltip display
+function getCellDate(cellIndex: number, totalCells: number): string {
+  const daysAgo = totalCells - 1 - cellIndex;
+  const date = new Date();
+  date.setDate(date.getDate() - daysAgo);
+  const dayName = DAY_NAMES[date.getDay()];
+  const month = MONTHS[date.getMonth()];
+  const day = date.getDate();
+  return `${dayName}, ${month} ${day}`;
+}
+
+function HeatmapCell({ level, index, totalCells }: { level: number; index: number; totalCells: number }) {
+  const dateStr = getCellDate(index, totalCells);
+  const label = level === 0
+    ? `No contributions on ${dateStr}`
+    : `${level} contribution${level !== 1 ? "s" : ""} on ${dateStr}`;
+
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        <div
+          className={`w-3 h-3 rounded-sm ${LEVEL_CLASSES[level]} transition-all duration-150 hover:ring-1 hover:ring-git-green/30 hover:opacity-80`}
+        />
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content
+          className="z-50 rounded-lg border border-terminal-border bg-terminal-window px-2.5 py-1.5 font-mono text-[10px] text-text-muted shadow-terminal"
+          sideOffset={4}
+        >
+          {label}
+          <Tooltip.Arrow className="fill-terminal-border" />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
+}
+
+function MobileHeatmapCell({ level, index, totalCells }: { level: number; index: number; totalCells: number }) {
+  const dateStr = getCellDate(index, totalCells);
+  const label = level === 0
+    ? `No contributions on ${dateStr}`
+    : `${level} contribution${level !== 1 ? "s" : ""} on ${dateStr}`;
+
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        <div
+          className={`w-full aspect-square rounded-sm ${LEVEL_CLASSES[level]} transition-all duration-150`}
+        />
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content
+          className="z-50 rounded-lg border border-terminal-border bg-terminal-window px-2.5 py-1.5 font-mono text-[10px] text-text-muted shadow-terminal"
+          sideOffset={4}
+        >
+          {label}
+          <Tooltip.Arrow className="fill-terminal-border" />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
+  );
+}
+
 export function ContributionHeatmap() {
   return (
-    <div className="py-8 px-4">
-      <div className="max-w-5xl mx-auto">
-        {/* Section header */}
-        <div className="flex items-center gap-3 mb-4 font-mono text-xs text-text-muted overflow-hidden">
-          <span className="text-git-green shrink-0">$</span>
-          <span className="truncate">
-            git log --stat --since=&quot;1 year ago&quot; --author=&quot;{profile.handle}&quot;
-          </span>
-        </div>
-
-        {/* ── MOBILE layout (< md) ─────────────────────────────────── */}
-        <div className="block md:hidden space-y-4">
-          {/* Stat cards */}
-          <div className="grid grid-cols-3 gap-2">
-            {STATS.map(({ label, value }) => (
-              <div
-                key={label}
-                className="flex flex-col items-center py-3 px-2 rounded-xl border border-terminal-border bg-terminal-surface"
-              >
-                <span className="text-xl font-bold font-mono text-git-green leading-none mb-1">
-                  {value}
-                </span>
-                <span className="text-[10px] font-mono text-text-faint text-center leading-tight">
-                  {label}
-                </span>
-              </div>
-            ))}
+    <Tooltip.Provider delayDuration={100}>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="py-8 px-4"
+      >
+        <div className="max-w-5xl mx-auto">
+          {/* Section header */}
+          <div className="flex items-center gap-3 mb-4 font-mono text-xs text-text-muted overflow-hidden">
+            <span className="text-git-green shrink-0">$</span>
+            <span className="truncate">
+              git log --stat --since=&quot;1 year ago&quot; --author=&quot;{profile.handle}&quot;
+            </span>
           </div>
 
-          {/* 16-week compact heatmap */}
-          <div className="rounded-xl border border-terminal-border bg-terminal-surface p-3">
+          {/* ── MOBILE layout (< md) ─────────────────────────────────── */}
+          <div className="block md:hidden space-y-4">
+            {/* Stat cards */}
+            <div className="grid grid-cols-3 gap-2">
+              {STATS.map(({ label, value }) => (
+                <div
+                  key={label}
+                  className="flex flex-col items-center py-3 px-2 rounded-xl border border-terminal-border bg-terminal-surface"
+                >
+                  <span className="text-xl font-bold font-mono text-git-green leading-none mb-1">
+                    {value}
+                  </span>
+                  <span className="text-[10px] font-mono text-text-faint text-center leading-tight">
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* 16-week compact heatmap */}
+            <div className="rounded-xl border border-terminal-border bg-terminal-surface p-3">
+              {/* Month labels */}
+              <div
+                className="mb-1 text-[9px] font-mono text-text-faint"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: `repeat(${MOBILE_WEEKS}, minmax(0, 1fr))`,
+                  gap: "2px",
+                }}
+              >
+                {Array.from({ length: MOBILE_WEEKS }, (_, w) => {
+                  const idx = MOBILE_MONTH_POSITIONS.indexOf(w);
+                  return (
+                    <span key={w} className="overflow-hidden whitespace-nowrap">
+                      {idx >= 0 ? mobileMonthLabels[idx] : ""}
+                    </span>
+                  );
+                })}
+              </div>
+
+              {/* Cell grid */}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: `repeat(${MOBILE_WEEKS}, minmax(0, 1fr))`,
+                  gridTemplateRows: `repeat(${DAYS}, minmax(0, 1fr))`,
+                  gridAutoFlow: "column",
+                  gap: "3px",
+                }}
+              >
+                {mobileCells.map((level, i) => (
+                  <MobileHeatmapCell key={i} level={level} index={i} totalCells={mobileCells.length} />
+                ))}
+              </div>
+
+              {/* Legend */}
+              <div className="mt-2.5 flex items-center justify-end gap-1 text-[9px] font-mono text-text-faint">
+                <span>Less</span>
+                {LEVEL_CLASSES.map((cls, i) => (
+                  <div key={i} className={`w-2.5 h-2.5 rounded-sm ${cls}`} />
+                ))}
+                <span>More</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ── DESKTOP layout (≥ md) ────────────────────────────────── */}
+          <div className="hidden md:block overflow-x-auto pb-2">
             {/* Month labels */}
             <div
-              className="mb-1 text-[9px] font-mono text-text-faint"
+              className="mb-1 text-[10px] font-mono text-text-faint"
               style={{
                 display: "grid",
-                gridTemplateColumns: `repeat(${MOBILE_WEEKS}, minmax(0, 1fr))`,
+                gridTemplateColumns: `repeat(${WEEKS}, minmax(0, 1fr))`,
                 gap: "2px",
               }}
             >
-              {Array.from({ length: MOBILE_WEEKS }, (_, w) => {
-                const idx = MOBILE_MONTH_POSITIONS.indexOf(w);
+              {Array.from({ length: WEEKS }, (_, w) => {
+                const monthIdx = MONTH_POSITIONS.indexOf(w);
                 return (
                   <span key={w} className="overflow-hidden whitespace-nowrap">
-                    {idx >= 0 ? mobileMonthLabels[idx] : ""}
+                    {monthIdx >= 0 ? MONTHS[monthIdx] : ""}
                   </span>
                 );
               })}
             </div>
 
-            {/* Cell grid */}
+            {/* Cell grid — column-major (day within week) */}
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: `repeat(${MOBILE_WEEKS}, minmax(0, 1fr))`,
+                gridTemplateColumns: `repeat(${WEEKS}, minmax(0, 1fr))`,
                 gridTemplateRows: `repeat(${DAYS}, minmax(0, 1fr))`,
                 gridAutoFlow: "column",
-                gap: "3px",
+                gap: "2px",
               }}
             >
-              {mobileCells.map((level, i) => (
-                <div
-                  key={i}
-                  title={`Activity level ${level}`}
-                  className={`w-full aspect-square rounded-sm ${LEVEL_CLASSES[level]}`}
-                />
+              {cells.map((level, i) => (
+                <HeatmapCell key={i} level={level} index={i} totalCells={cells.length} />
               ))}
             </div>
 
             {/* Legend */}
-            <div className="mt-2.5 flex items-center justify-end gap-1 text-[9px] font-mono text-text-faint">
+            <div className="mt-2 flex items-center justify-end gap-1.5 text-[10px] font-mono text-text-faint">
               <span>Less</span>
               {LEVEL_CLASSES.map((cls, i) => (
-                <div key={i} className={`w-2.5 h-2.5 rounded-sm ${cls}`} />
+                <div key={i} className={`w-3 h-3 rounded-sm ${cls}`} />
               ))}
               <span>More</span>
             </div>
           </div>
         </div>
-
-        {/* ── DESKTOP layout (≥ md) ────────────────────────────────── */}
-        <div className="hidden md:block overflow-x-auto pb-2">
-          {/* Month labels */}
-          <div
-            className="mb-1 text-[10px] font-mono text-text-faint"
-            style={{
-              display: "grid",
-              gridTemplateColumns: `repeat(${WEEKS}, minmax(0, 1fr))`,
-              gap: "2px",
-            }}
-          >
-            {Array.from({ length: WEEKS }, (_, w) => {
-              const monthIdx = MONTH_POSITIONS.indexOf(w);
-              return (
-                <span key={w} className="overflow-hidden whitespace-nowrap">
-                  {monthIdx >= 0 ? MONTHS[monthIdx] : ""}
-                </span>
-              );
-            })}
-          </div>
-
-          {/* Cell grid — column-major (day within week) */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: `repeat(${WEEKS}, minmax(0, 1fr))`,
-              gridTemplateRows: `repeat(${DAYS}, minmax(0, 1fr))`,
-              gridAutoFlow: "column",
-              gap: "2px",
-            }}
-          >
-            {cells.map((level, i) => (
-              <div
-                key={i}
-                title={`Activity level ${level}`}
-                className={`w-3 h-3 rounded-sm ${LEVEL_CLASSES[level]} transition-opacity hover:opacity-80`}
-              />
-            ))}
-          </div>
-
-          {/* Legend */}
-          <div className="mt-2 flex items-center justify-end gap-1.5 text-[10px] font-mono text-text-faint">
-            <span>Less</span>
-            {LEVEL_CLASSES.map((cls, i) => (
-              <div key={i} className={`w-3 h-3 rounded-sm ${cls}`} />
-            ))}
-            <span>More</span>
-          </div>
-        </div>
-      </div>
-    </div>
+      </motion.div>
+    </Tooltip.Provider>
   );
 }

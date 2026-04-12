@@ -145,7 +145,7 @@ function CommitEntry({
         </div>
 
         {/* Commit card */}
-        <div className="rounded-xl border border-terminal-border bg-terminal-surface p-3 sm:p-5 hover:border-terminal-border/80 transition-colors">
+        <div className="rounded-xl border border-terminal-border bg-terminal-surface p-4 sm:p-5 hover:border-git-blue/30 hover:shadow-card-hover transition-all duration-200">
           <div className="flex items-start gap-3 mb-3">
             {(() => { const Icon = TYPE_ICON_MAP[entry.type] ?? Folder; return <Icon size={18} className={cn("shrink-0 mt-0.5", colors.text)} />; })()}
             <div>

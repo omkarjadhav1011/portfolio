@@ -230,14 +230,14 @@ export function CommandPalette() {
             {/* Panel */}
             <Dialog.Content asChild>
               {/* Positioning wrapper — static div so Framer Motion transform doesn't break centering */}
-              <div className="fixed top-[10%] sm:top-[14%] inset-x-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:w-full sm:max-w-2xl sm:px-4 z-50">
+              <div className="fixed inset-0 sm:inset-auto sm:top-[14%] sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-2xl sm:px-4 z-50 flex flex-col sm:block">
               <motion.div
                 initial={{ opacity: 0, scale: 0.96, y: -16 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: -16 }}
                 transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
               >
-                <div className="rounded-xl overflow-hidden shadow-terminal border border-terminal-border bg-terminal-window font-mono">
+                <div className="rounded-none sm:rounded-xl overflow-hidden shadow-terminal border-0 sm:border border-terminal-border bg-terminal-window font-mono flex flex-col h-full sm:h-auto">
 
                   {/* ── Title bar ─────────────────────────────────────────── */}
                   <div className="flex items-center justify-between px-4 py-2.5 bg-terminal-surface border-b border-terminal-border">
@@ -309,7 +309,7 @@ export function CommandPalette() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.1 }}
-                        className="min-h-[160px] max-h-72 overflow-y-auto p-4 space-y-3 text-sm"
+                        className="min-h-[160px] max-h-[calc(100vh-180px)] sm:max-h-72 overflow-y-auto p-4 space-y-3 text-sm flex-1"
                       >
                         {history.length === 0 && (
                           <div className="space-y-3">
@@ -372,7 +372,7 @@ export function CommandPalette() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.1 }}
-                        className="min-h-[160px] max-h-72 overflow-y-auto p-4"
+                        className="min-h-[160px] max-h-[calc(100vh-180px)] sm:max-h-72 overflow-y-auto p-4 flex-1"
                       >
                         {messages.length === 0 && !isTyping ? (
                           /* Empty state: suggested prompts */

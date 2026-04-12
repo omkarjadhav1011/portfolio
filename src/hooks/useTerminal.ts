@@ -6,6 +6,14 @@ import { profile } from "@/data/profile";
 import { projects } from "@/data/projects";
 import { skillBranches } from "@/data/skills";
 import { timeline } from "@/data/experience";
+import { fuzzyFilter } from "@/lib/fuzzy";
+
+const KNOWN_COMMANDS = [
+  "help", "clear", "whoami", "ls", "skills", "projects",
+  "theme dark", "theme light", "cat readme.md",
+  "git checkout", "git log", "git status", "git branch",
+  "git --version", "git remote", "git stash pop", "git show",
+];
 
 const SECTION_IDS = ["hero", "about", "skills", "projects", "experience", "contact"];
 
@@ -275,7 +283,21 @@ export function useTerminal() {
       };
     }
 
-    // ── unknown ────────────────────────────────────────────────────────────
+    // ── unknown — with fuzzy suggestions ─────────────────────────────────
+    const suggestions = fuzzyFilter(raw.trim(), KNOWN_COMMANDS, (c) => c).slice(0, 3);
+    if (suggestions.length > 0) {
+      return {
+        output: [
+          `command not found: ${cmd.base}`,
+          "",
+          "Did you mean:",
+          ...suggestions.map((s) => `  ${s}`),
+          "",
+          "Type 'help' for all commands.",
+        ],
+        type: "error",
+      };
+    }
     return {
       output: [
         `command not found: ${cmd.base}`,

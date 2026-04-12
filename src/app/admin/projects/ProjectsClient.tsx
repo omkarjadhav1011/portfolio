@@ -1,11 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { Folder } from "lucide-react";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { FormInput, FormTextarea, FormSelect, FormCheckbox } from "@/components/admin/FormField";
 import { TagInput } from "@/components/admin/TagInput";
+import { LoadingButton } from "@/components/ui/LoadingButton";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { TableSearch } from "@/components/admin/TableSearch";
+import { SortableHeader } from "@/components/admin/SortableHeader";
 import { useToast } from "@/components/admin/ToastProvider";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { useTableSort } from "@/hooks/useTableSort";
+import { projectSchema } from "@/lib/admin-validations";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 interface Project {
   id: string;
@@ -45,35 +54,59 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
   const [editing, setEditing] = useState<Project | null>(null);
   const [form, setForm] = useState<Omit<Project, "id">>(EMPTY);
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
   const { toast } = useToast();
   const router = useRouter();
+  const { errors, validate, clearErrors } = useFormValidation(projectSchema);
+
+  // Search filter
+  const filtered = useMemo(() => {
+    if (!search.trim()) return projects;
+    const q = search.toLowerCase();
+    return projects.filter(
+      (p) => p.repoName.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || p.language.toLowerCase().includes(q)
+    );
+  }, [projects, search]);
+
+  // Sort
+  const { sorted, sortKey, sortDir, toggleSort } = useTableSort(filtered, "repoName" as keyof Project);
 
   function openCreate() {
     setEditing(null);
     setForm(EMPTY);
+    clearErrors();
     setModalOpen(true);
   }
 
   function openEdit(p: Project) {
     setEditing(p);
     setForm({ ...p, liveUrl: p.liveUrl ?? "", repoUrl: p.repoUrl ?? "", longDescription: p.longDescription ?? "" });
+    clearErrors();
     setModalOpen(true);
   }
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this project? This cannot be undone.")) return;
-    const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      setProjects((prev) => prev.filter((p) => p.id !== id));
-      toast("Project deleted", "success");
-      router.refresh();
-    } else {
-      toast("Failed to delete", "error");
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/projects/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setProjects((prev) => prev.filter((p) => p.id !== id));
+        toast("Project deleted", "success");
+        router.refresh();
+      } else {
+        toast("Failed to delete", "error");
+      }
+    } finally {
+      setDeletingId(null);
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const data = { ...form, stars: Number(form.stars), forks: Number(form.forks), commits: Number(form.commits) };
+    if (!validate(data)) return;
     setLoading(true);
     try {
       const url = editing ? `/api/projects/${editing.id}` : "/api/projects";
@@ -81,7 +114,7 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, stars: Number(form.stars), forks: Number(form.forks), commits: Number(form.commits) }),
+        body: JSON.stringify(data),
       });
       if (res.ok) {
         const saved: Project = await res.json();
@@ -114,7 +147,7 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
   };
 
   return (
-    <div className="space-y-6 font-mono">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 font-mono">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -130,28 +163,36 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
         </button>
       </div>
 
+      {/* Search */}
+      <TableSearch value={search} onChange={setSearch} placeholder="Search projects..." />
+
       {/* Table */}
       <div className="rounded-xl border border-terminal-border bg-terminal-surface overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-terminal-border bg-terminal-bg">
-                <th className="text-left px-4 py-3 text-text-muted font-normal">repo</th>
-                <th className="text-left px-4 py-3 text-text-muted font-normal">lang</th>
-                <th className="text-left px-4 py-3 text-text-muted font-normal">status</th>
+                <SortableHeader label="repo" sortKey="repoName" currentKey={String(sortKey)} currentDir={sortDir} onSort={() => toggleSort("repoName" as keyof Project)} className="px-4 py-3" />
+                <SortableHeader label="lang" sortKey="language" currentKey={String(sortKey)} currentDir={sortDir} onSort={() => toggleSort("language" as keyof Project)} className="px-4 py-3" />
+                <SortableHeader label="status" sortKey="status" currentKey={String(sortKey)} currentDir={sortDir} onSort={() => toggleSort("status" as keyof Project)} className="px-4 py-3" />
                 <th className="text-left px-4 py-3 text-text-muted font-normal">pinned</th>
                 <th className="text-right px-4 py-3 text-text-muted font-normal">actions</th>
               </tr>
             </thead>
             <tbody>
-              {projects.length === 0 && (
+              {sorted.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="text-center py-12 text-text-faint">
-                    No projects yet — create your first one
+                  <td colSpan={5}>
+                    <EmptyState
+                      icon={<Folder size={32} />}
+                      title={search ? "No projects match your search" : "No projects yet"}
+                      description={search ? "Try a different search term" : "Create your first repository to get started"}
+                      action={!search ? { label: "+ new project", onClick: openCreate } : undefined}
+                    />
                   </td>
                 </tr>
               )}
-              {projects.map((p) => (
+              {sorted.map((p) => (
                 <tr key={p.id} className="border-b border-terminal-border/50 hover:bg-terminal-bg/40 transition-colors">
                   <td className="px-4 py-3">
                     <div className="text-text-primary">{p.repoName}</div>
@@ -172,12 +213,15 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
                     >
                       edit
                     </button>
-                    <button
+                    <LoadingButton
+                      variant="danger"
+                      loading={deletingId === p.id}
+                      loadingText="..."
                       onClick={() => handleDelete(p.id)}
-                      className="text-git-red hover:underline"
+                      className="border-0 bg-transparent px-0 hover:bg-transparent hover:underline"
                     >
                       delete
-                    </button>
+                    </LoadingButton>
                   </td>
                 </tr>
               ))}
@@ -194,27 +238,27 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <FormInput label="repo name" value={form.repoName} onChange={(e) => field("repoName", e.target.value)} required />
-            <FormInput label="slug (url)" value={form.slug} onChange={(e) => field("slug", e.target.value)} required placeholder="my-project" />
+            <FormInput label="repo name" value={form.repoName} onChange={(e) => field("repoName", e.target.value)} error={errors.repoName} required />
+            <FormInput label="slug (url)" value={form.slug} onChange={(e) => field("slug", e.target.value)} error={errors.slug} required placeholder="my-project" />
           </div>
-          <FormInput label="description" value={form.description} onChange={(e) => field("description", e.target.value)} required />
+          <FormInput label="description" value={form.description} onChange={(e) => field("description", e.target.value)} error={errors.description} required />
           <div className="grid grid-cols-2 gap-3">
-            <FormInput label="language" value={form.language} onChange={(e) => field("language", e.target.value)} required />
-            <FormInput label="language color (hex)" value={form.languageColor} onChange={(e) => field("languageColor", e.target.value)} placeholder="#3178c6" />
+            <FormInput label="language" value={form.language} onChange={(e) => field("language", e.target.value)} error={errors.language} required />
+            <FormInput label="language color (hex)" value={form.languageColor} onChange={(e) => field("languageColor", e.target.value)} error={errors.languageColor} placeholder="#3178c6" />
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <FormInput label="stars" type="number" value={form.stars} onChange={(e) => field("stars", e.target.value)} min={0} />
-            <FormInput label="forks" type="number" value={form.forks} onChange={(e) => field("forks", e.target.value)} min={0} />
-            <FormInput label="commits" type="number" value={form.commits} onChange={(e) => field("commits", e.target.value)} min={0} />
+            <FormInput label="stars" type="number" value={form.stars} onChange={(e) => field("stars", e.target.value)} error={errors.stars} min={0} />
+            <FormInput label="forks" type="number" value={form.forks} onChange={(e) => field("forks", e.target.value)} error={errors.forks} min={0} />
+            <FormInput label="commits" type="number" value={form.commits} onChange={(e) => field("commits", e.target.value)} error={errors.commits} min={0} />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <FormInput label="last commit" value={form.lastCommit} onChange={(e) => field("lastCommit", e.target.value)} placeholder="just now" />
-            <FormInput label="last commit msg" value={form.lastCommitMsg} onChange={(e) => field("lastCommitMsg", e.target.value)} />
+            <FormInput label="last commit" value={form.lastCommit} onChange={(e) => field("lastCommit", e.target.value)} error={errors.lastCommit} placeholder="just now" />
+            <FormInput label="last commit msg" value={form.lastCommitMsg} onChange={(e) => field("lastCommitMsg", e.target.value)} error={errors.lastCommitMsg} />
           </div>
           <TagInput label="tags" values={form.tags} onChange={(v) => field("tags", v)} />
           <div className="grid grid-cols-2 gap-3">
-            <FormInput label="live url" value={form.liveUrl ?? ""} onChange={(e) => field("liveUrl", e.target.value)} placeholder="https://..." />
-            <FormInput label="repo url" value={form.repoUrl ?? ""} onChange={(e) => field("repoUrl", e.target.value)} placeholder="https://github.com/..." />
+            <FormInput label="live url" value={form.liveUrl ?? ""} onChange={(e) => field("liveUrl", e.target.value)} error={errors.liveUrl} placeholder="https://..." />
+            <FormInput label="repo url" value={form.repoUrl ?? ""} onChange={(e) => field("repoUrl", e.target.value)} error={errors.repoUrl} placeholder="https://github.com/..." />
           </div>
           <div className="grid grid-cols-2 gap-3 items-end">
             <FormSelect label="status" value={form.status} onChange={(e) => field("status", e.target.value)} options={STATUS_OPTIONS} />
@@ -223,23 +267,25 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
           <FormTextarea label="long description" value={form.longDescription ?? ""} onChange={(e) => field("longDescription", e.target.value)} rows={4} />
 
           <div className="flex gap-2 pt-2">
-            <button
+            <LoadingButton
               type="submit"
-              disabled={loading}
-              className="flex-1 py-2 rounded-lg border border-git-green/40 bg-git-green/10 text-git-green text-xs hover:bg-git-green/20 transition-all disabled:opacity-50"
+              loading={loading}
+              loadingText="Saving..."
+              className="flex-1 py-2"
             >
-              {loading ? "Saving..." : editing ? "$ git commit --amend" : "$ git commit -m 'new project'"}
-            </button>
-            <button
+              {editing ? "$ git commit --amend" : "$ git commit -m 'new project'"}
+            </LoadingButton>
+            <LoadingButton
               type="button"
+              variant="ghost"
               onClick={() => setModalOpen(false)}
-              className="px-4 py-2 rounded-lg border border-terminal-border text-text-muted text-xs hover:text-text-secondary transition-colors"
+              className="px-4 py-2"
             >
               cancel
-            </button>
+            </LoadingButton>
           </div>
         </form>
       </AdminModal>
-    </div>
+    </motion.div>
   );
 }

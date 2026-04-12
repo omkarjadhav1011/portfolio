@@ -2,8 +2,14 @@
 
 import { InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes, ReactNode } from "react";
 
-const inputClass =
-  "w-full bg-terminal-bg border border-terminal-border rounded-lg px-3 py-2 font-mono text-xs text-text-primary placeholder-text-faint focus:outline-none focus:border-git-blue/50 focus:ring-1 focus:ring-git-blue/20 transition-colors";
+const inputBase =
+  "w-full bg-terminal-bg border rounded-lg px-3 py-2 font-mono text-xs text-text-primary placeholder-text-faint focus:outline-none transition-colors";
+const inputNormal = "border-terminal-border focus:border-git-blue/50 focus:ring-1 focus:ring-git-blue/20";
+const inputError = "border-git-red/50 focus:border-git-red/70 focus:ring-1 focus:ring-git-red/30";
+
+function inputClass(error?: string) {
+  return `${inputBase} ${error ? inputError : inputNormal}`;
+}
 
 interface FieldProps {
   label: string;
@@ -29,7 +35,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 export function FormInput({ label, error, className, ...props }: InputProps) {
   return (
     <FieldWrapper label={label} error={error}>
-      <input className={`${inputClass} ${className ?? ""}`} {...props} />
+      <input className={`${inputClass(error)} ${className ?? ""}`} aria-invalid={!!error} {...props} />
     </FieldWrapper>
   );
 }
@@ -42,7 +48,7 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 export function FormTextarea({ label, error, className, ...props }: TextareaProps) {
   return (
     <FieldWrapper label={label} error={error}>
-      <textarea className={`${inputClass} resize-none ${className ?? ""}`} {...props} />
+      <textarea className={`${inputClass(error)} resize-none ${className ?? ""}`} aria-invalid={!!error} {...props} />
     </FieldWrapper>
   );
 }
@@ -56,7 +62,7 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 export function FormSelect({ label, error, options, className, ...props }: SelectProps) {
   return (
     <FieldWrapper label={label} error={error}>
-      <select className={`${inputClass} ${className ?? ""}`} {...props}>
+      <select className={`${inputClass(error)} ${className ?? ""}`} aria-invalid={!!error} {...props}>
         {options.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
