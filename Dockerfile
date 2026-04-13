@@ -18,11 +18,16 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Prisma needs DATABASE_URL at generate/build time (schema only, not the actual DB)
+# Prisma needs DATABASE_URL at generate/build time
 ENV DATABASE_URL="file:./prisma/dev.db"
 
-# Generate Prisma client
+# Generate Prisma client, push schema, and seed the DB
 RUN npx prisma generate
+RUN npx prisma db push
+RUN npx ts-node --compiler-options '{"module":"CommonJS","moduleResolution":"node"}' prisma/seed.ts
+
+# Ensure public dir exists (Next.js standalone needs it even if empty)
+RUN mkdir -p public
 
 # Build Next.js (standalone output)
 RUN npm run build

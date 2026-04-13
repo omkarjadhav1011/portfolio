@@ -2,7 +2,7 @@ services:
   portfolio:
     build: .
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - DATABASE_URL=file:./prisma/dev.db
     env_file:
