@@ -10,29 +10,29 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Terminal color system
+        // Terminal color system — values come from CSS variables (globals.css)
         terminal: {
-          bg: "#0d1117",
-          surface: "#161b22",
-          window: "#1a1a2e",
-          border: "#30363d",
+          bg: "rgb(var(--color-terminal-bg) / <alpha-value>)",
+          surface: "rgb(var(--color-terminal-surface) / <alpha-value>)",
+          window: "rgb(var(--color-terminal-window) / <alpha-value>)",
+          border: "rgb(var(--color-terminal-border) / <alpha-value>)",
         },
         git: {
-          green: "#00ff88",
-          "green-dim": "#238636",
-          "green-muted": "#1a4731",
-          blue: "#58a6ff",
-          "blue-dim": "#1f6feb",
-          orange: "#f0883e",
-          red: "#ff7b72",
-          purple: "#d2a8ff",
-          yellow: "#e3b341",
+          green: "rgb(var(--color-git-green) / <alpha-value>)",
+          "green-dim": "rgb(var(--color-git-green-dim) / <alpha-value>)",
+          "green-muted": "rgb(var(--color-git-green-muted) / <alpha-value>)",
+          blue: "rgb(var(--color-git-blue) / <alpha-value>)",
+          "blue-dim": "rgb(var(--color-git-blue-dim) / <alpha-value>)",
+          orange: "rgb(var(--color-git-orange) / <alpha-value>)",
+          red: "rgb(var(--color-git-red) / <alpha-value>)",
+          purple: "rgb(var(--color-git-purple) / <alpha-value>)",
+          yellow: "rgb(var(--color-git-yellow) / <alpha-value>)",
         },
         text: {
-          primary: "#e6edf3",
-          secondary: "#c9d1d9",
-          muted: "#8b949e",
-          faint: "#484f58",
+          primary: "rgb(var(--color-text-primary) / <alpha-value>)",
+          secondary: "rgb(var(--color-text-secondary) / <alpha-value>)",
+          muted: "rgb(var(--color-text-muted) / <alpha-value>)",
+          faint: "rgb(var(--color-text-faint) / <alpha-value>)",
         },
       },
       fontFamily: {
@@ -72,13 +72,16 @@ const config: Config = {
         },
       },
       boxShadow: {
-        terminal: "0 0 0 1px #30363d, 0 8px 32px rgba(0,0,0,0.6)",
-        "terminal-green": "0 0 0 1px #238636, 0 0 20px rgba(0,255,136,0.1)",
-        "card-hover": "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px #30363d",
+        terminal:
+          "0 0 0 1px rgb(var(--color-terminal-border)), 0 8px 32px rgb(var(--color-shadow-alpha))",
+        "terminal-green":
+          "0 0 0 1px rgb(var(--color-git-green-dim)), 0 0 20px rgb(var(--color-git-green) / 0.1)",
+        "card-hover":
+          "0 8px 32px rgb(var(--color-shadow-alpha)), 0 0 0 1px rgb(var(--color-terminal-border))",
       },
       backgroundImage: {
         "grid-pattern":
-          "linear-gradient(rgba(48,54,61,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(48,54,61,0.3) 1px, transparent 1px)",
+          "linear-gradient(rgb(var(--color-terminal-border) / 0.3) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--color-terminal-border) / 0.3) 1px, transparent 1px)",
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
       },
       backgroundSize: {

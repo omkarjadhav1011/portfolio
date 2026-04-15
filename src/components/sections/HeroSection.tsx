@@ -101,7 +101,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
               </span>
               <span
                 className="block text-4xl sm:text-5xl md:text-6xl font-bold text-text-primary"
-                style={{ textShadow: "0 0 8px rgba(0,255,136,0.4)" }}
+                style={{ textShadow: "0 0 8px rgb(var(--color-text-glow))" }}
               >
                 {profile.name}
               </span>

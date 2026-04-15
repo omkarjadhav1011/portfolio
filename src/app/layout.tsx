@@ -75,7 +75,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`dark ${jetbrainsMono.variable} ${inter.variable}`}>
+    <html
+      lang="en"
+      className={`dark ${jetbrainsMono.variable} ${inter.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        {/* Prevent FOUC: sync theme class before React hydrates */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||(!t||t==='system')&&window.matchMedia('(prefers-color-scheme:dark)').matches;if(!d)document.documentElement.classList.remove('dark')}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className="relative">
         <Providers>
           {children}

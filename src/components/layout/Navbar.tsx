@@ -7,6 +7,7 @@ import { useScrollProgress } from "@/hooks/useScrollProgress";
 import { useCommandPaletteStore } from "@/store/commandPalette";
 import { profile } from "@/data/profile";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 const NAV_SECTIONS = [
   { id: "about", label: "about" },
@@ -70,8 +71,13 @@ export function Navbar() {
             ))}
           </div>
 
-          {/* AI trigger + mobile toggle */}
+          {/* AI trigger + theme + mobile toggle */}
           <div className="flex items-center gap-3">
+            {/* Theme toggle (desktop) */}
+            <div className="hidden md:block">
+              <ThemeToggle />
+            </div>
+
             {/* Prominent clickable AI trigger — opens palette in AI mode */}
             <button
               onClick={() => openInMode("ai")}
@@ -147,6 +153,12 @@ export function Navbar() {
                 git checkout {s.id}
               </button>
             ))}
+
+            <div className="border-t border-terminal-border my-1" />
+            <div className="flex items-center justify-between px-4 py-2">
+              <span className="text-text-faint text-xs font-mono">theme</span>
+              <ThemeToggle />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
