@@ -45,6 +45,8 @@ CLAUDE.md
 GEMINI.md
 *.ai
 *.prompt
+CLAUDE.md
+Gemini.md
 
 # Prisma
 prisma/dev.db
