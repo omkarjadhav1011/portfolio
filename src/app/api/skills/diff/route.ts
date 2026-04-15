@@ -30,6 +30,9 @@ export async function POST(request: NextRequest) {
     if (err instanceof Error && err.name === "ZodError") {
       return NextResponse.json({ error: "Validation failed", details: err.message }, { status: 400 });
     }
+    if (err instanceof Error && err.message.includes("Unique constraint failed")) {
+      return NextResponse.json({ error: "A diff with this name already exists" }, { status: 409 });
+    }
     return NextResponse.json({ error: "Failed to create diff" }, { status: 500 });
   }
 }
