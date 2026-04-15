@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Code, GitCompareArrows } from "lucide-react";
+import { Code, GitCompareArrows, ChevronUp, ChevronDown } from "lucide-react";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { FormInput, FormSelect } from "@/components/admin/FormField";
 import { LoadingButton } from "@/components/ui/LoadingButton";
@@ -37,6 +37,7 @@ interface SkillDiff {
   name: string;
   type: string;
   note?: string | null;
+  order: number;
 }
 
 const DIFF_TYPE_OPTIONS = [
@@ -225,6 +226,42 @@ export function SkillsClient({
     }
   }
 
+  const [reorderingId, setReorderingId] = useState<string | null>(null);
+
+  async function handleReorder(id: string, direction: "up" | "down") {
+    const sorted = [...diffs].sort((a, b) => a.order - b.order);
+    const idx = sorted.findIndex((d) => d.id === id);
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+
+    // Optimistic swap
+    const updated = [...sorted];
+    const tempOrder = updated[idx].order;
+    updated[idx] = { ...updated[idx], order: updated[swapIdx].order };
+    updated[swapIdx] = { ...updated[swapIdx], order: tempOrder };
+    setDiffs(updated);
+    setReorderingId(id);
+
+    try {
+      const res = await fetch("/api/admin/stack/reorder", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, direction }),
+      });
+      if (!res.ok) {
+        setDiffs(sorted); // revert
+        toast("Failed to reorder", "error");
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setDiffs(sorted); // revert
+      toast("Failed to reorder", "error");
+    } finally {
+      setReorderingId(null);
+    }
+  }
+
   const DIFF_COLORS: Record<string, string> = { added: "text-git-green", modified: "text-git-yellow", deprecated: "text-git-red" };
 
   return (
@@ -309,13 +346,14 @@ export function SkillsClient({
                 <SortableHeader label="type" sortKey="type" currentKey={String(diffSortKey)} currentDir={diffSortDir} onSort={() => toggleDiffSort("type" as keyof SkillDiff)} className="px-4 py-3" />
                 <SortableHeader label="name" sortKey="name" currentKey={String(diffSortKey)} currentDir={diffSortDir} onSort={() => toggleDiffSort("name" as keyof SkillDiff)} className="px-4 py-3" />
                 <th className="text-left px-4 py-3 text-text-muted font-normal">note</th>
+                <th className="text-center px-4 py-3 text-text-muted font-normal">order</th>
                 <th className="text-right px-4 py-3 text-text-muted font-normal">actions</th>
               </tr>
             </thead>
             <tbody>
               {sortedDiffs.length === 0 && (
                 <tr>
-                  <td colSpan={4}>
+                  <td colSpan={5}>
                     <EmptyState
                       icon={<GitCompareArrows size={32} />}
                       title={diffSearch ? "No diffs match your search" : "No diff entries yet"}
@@ -325,13 +363,38 @@ export function SkillsClient({
                   </td>
                 </tr>
               )}
-              {sortedDiffs.map((d) => (
+              {sortedDiffs.map((d, idx) => {
+                const orderedDiffs = [...diffs].sort((a, b) => a.order - b.order);
+                const orderIdx = orderedDiffs.findIndex((od) => od.id === d.id);
+                const isFirst = orderIdx === 0;
+                const isLast = orderIdx === orderedDiffs.length - 1;
+                return (
                 <tr key={d.id} className="border-b border-terminal-border/50 hover:bg-terminal-bg/40 transition-colors">
                   <td className={`px-4 py-2.5 font-bold ${DIFF_COLORS[d.type]}`}>
                     {d.type === "added" ? "+" : d.type === "deprecated" ? "-" : "~"} {d.type}
                   </td>
                   <td className={`px-4 py-2.5 ${DIFF_COLORS[d.type]}`}>{d.name}</td>
                   <td className="px-4 py-2.5 text-text-faint">{d.note ?? "—"}</td>
+                  <td className="px-4 py-2.5 text-center">
+                    <div className="inline-flex gap-1">
+                      <button
+                        onClick={() => handleReorder(d.id, "up")}
+                        disabled={isFirst || reorderingId === d.id}
+                        className="p-0.5 rounded hover:bg-terminal-bg disabled:opacity-30 disabled:cursor-not-allowed text-text-muted hover:text-text-primary transition-colors"
+                        title="Move up"
+                      >
+                        <ChevronUp size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleReorder(d.id, "down")}
+                        disabled={isLast || reorderingId === d.id}
+                        className="p-0.5 rounded hover:bg-terminal-bg disabled:opacity-30 disabled:cursor-not-allowed text-text-muted hover:text-text-primary transition-colors"
+                        title="Move down"
+                      >
+                        <ChevronDown size={14} />
+                      </button>
+                    </div>
+                  </td>
                   <td className="px-4 py-2.5 text-right">
                     <button onClick={() => openEditDiff(d)} className="text-git-blue hover:underline mr-3">edit</button>
                     <LoadingButton
@@ -345,7 +408,8 @@ export function SkillsClient({
                     </LoadingButton>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
