@@ -7,13 +7,11 @@ import { FormInput, FormSelect } from "@/components/admin/FormField";
 import { LoadingButton } from "@/components/ui/LoadingButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSearch } from "@/components/admin/TableSearch";
-import { SortableHeader } from "@/components/admin/SortableHeader";
 import { useToast } from "@/components/admin/ToastProvider";
 import { useFormValidation } from "@/hooks/useFormValidation";
-import { useTableSort } from "@/hooks/useTableSort";
 import { skillSchema, skillDiffSchema } from "@/lib/admin-validations";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 
 interface Skill {
   id: string;
@@ -89,7 +87,7 @@ export function SkillsClient({
     return diffs.filter((d) => d.name.toLowerCase().includes(q) || d.type.toLowerCase().includes(q));
   }, [diffs, diffSearch]);
 
-  const { sorted: sortedDiffs, sortKey: diffSortKey, sortDir: diffSortDir, toggleSort: toggleDiffSort } = useTableSort(filteredDiffs, "name" as keyof SkillDiff);
+  const orderedDiffs = useMemo(() => [...filteredDiffs].sort((a, b) => a.order - b.order), [filteredDiffs]);
 
   function openAddSkill(branchId: string) {
     setEditingSkill(null);
@@ -343,17 +341,19 @@ export function SkillsClient({
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-terminal-border bg-terminal-bg">
-                <SortableHeader label="type" sortKey="type" currentKey={String(diffSortKey)} currentDir={diffSortDir} onSort={() => toggleDiffSort("type" as keyof SkillDiff)} className="px-4 py-3" />
-                <SortableHeader label="name" sortKey="name" currentKey={String(diffSortKey)} currentDir={diffSortDir} onSort={() => toggleDiffSort("name" as keyof SkillDiff)} className="px-4 py-3" />
+                <th className="text-center px-3 py-3 text-text-muted font-normal w-10">#</th>
+                <th className="text-left px-4 py-3 text-text-muted font-normal">type</th>
+                <th className="text-left px-4 py-3 text-text-muted font-normal">name</th>
                 <th className="text-left px-4 py-3 text-text-muted font-normal">note</th>
                 <th className="text-center px-4 py-3 text-text-muted font-normal">order</th>
                 <th className="text-right px-4 py-3 text-text-muted font-normal">actions</th>
               </tr>
             </thead>
+            <LayoutGroup>
             <tbody>
-              {sortedDiffs.length === 0 && (
+              {orderedDiffs.length === 0 && (
                 <tr>
-                  <td colSpan={5}>
+                  <td colSpan={6}>
                     <EmptyState
                       icon={<GitCompareArrows size={32} />}
                       title={diffSearch ? "No diffs match your search" : "No diff entries yet"}
@@ -363,13 +363,24 @@ export function SkillsClient({
                   </td>
                 </tr>
               )}
-              {sortedDiffs.map((d, idx) => {
-                const orderedDiffs = [...diffs].sort((a, b) => a.order - b.order);
-                const orderIdx = orderedDiffs.findIndex((od) => od.id === d.id);
-                const isFirst = orderIdx === 0;
-                const isLast = orderIdx === orderedDiffs.length - 1;
+              <AnimatePresence>
+              {orderedDiffs.map((d, idx) => {
+                const isFirst = idx === 0;
+                const isLast = idx === orderedDiffs.length - 1;
                 return (
-                <tr key={d.id} className="border-b border-terminal-border/50 hover:bg-terminal-bg/40 transition-colors">
+                <motion.tr
+                  key={d.id}
+                  layout
+                  layoutId={d.id}
+                  initial={false}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ layout: { type: "spring", stiffness: 500, damping: 35 } }}
+                  className="border-b border-terminal-border/50 hover:bg-terminal-bg/40 transition-colors"
+                >
+                  <td className="px-3 py-2.5 text-center text-text-faint font-mono text-[10px]">
+                    #{idx + 1}
+                  </td>
                   <td className={`px-4 py-2.5 font-bold ${DIFF_COLORS[d.type]}`}>
                     {d.type === "added" ? "+" : d.type === "deprecated" ? "-" : "~"} {d.type}
                   </td>
@@ -379,7 +390,7 @@ export function SkillsClient({
                     <div className="inline-flex gap-1">
                       <button
                         onClick={() => handleReorder(d.id, "up")}
-                        disabled={isFirst || reorderingId === d.id}
+                        disabled={isFirst || reorderingId !== null}
                         className="p-0.5 rounded hover:bg-terminal-bg disabled:opacity-30 disabled:cursor-not-allowed text-text-muted hover:text-text-primary transition-colors"
                         title="Move up"
                       >
@@ -387,7 +398,7 @@ export function SkillsClient({
                       </button>
                       <button
                         onClick={() => handleReorder(d.id, "down")}
-                        disabled={isLast || reorderingId === d.id}
+                        disabled={isLast || reorderingId !== null}
                         className="p-0.5 rounded hover:bg-terminal-bg disabled:opacity-30 disabled:cursor-not-allowed text-text-muted hover:text-text-primary transition-colors"
                         title="Move down"
                       >
@@ -407,10 +418,12 @@ export function SkillsClient({
                       delete
                     </LoadingButton>
                   </td>
-                </tr>
+                </motion.tr>
                 );
               })}
+              </AnimatePresence>
             </tbody>
+            </LayoutGroup>
           </table>
         </div>
       </div>
