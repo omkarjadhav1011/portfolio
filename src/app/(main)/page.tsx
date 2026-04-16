@@ -45,7 +45,7 @@ async function getPageData() {
       prisma.project.findMany({ orderBy: { pinned: "desc" } }),
       prisma.profile.findUnique({ where: { id: "main" } }),
       prisma.skillBranch.findMany({ include: { skills: true }, orderBy: { offset: "asc" } }),
-      prisma.skillDiff.findMany({ orderBy: { createdAt: "asc" } }),
+      prisma.skillDiff.findMany({ orderBy: { order: "asc" } }),
       prisma.commitEntry.findMany({ orderBy: { date: "desc" } }),
     ]);
 
