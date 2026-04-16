@@ -9,7 +9,25 @@ export async function PATCH(request: NextRequest) {
   }
 
   try {
-    const { id, direction } = await request.json();
+    const body = await request.json();
+
+    // Bulk reorder from drag-and-drop: { items: [{ id, position }] }
+    if (Array.isArray(body.items)) {
+      const { items } = body as { items: { id: string; position: number }[] };
+      if (!items.every((i) => typeof i.id === "string" && typeof i.position === "number")) {
+        return NextResponse.json({ error: "Invalid items payload" }, { status: 400 });
+      }
+      await prisma.$transaction(
+        items.map(({ id, position }) =>
+          prisma.skillDiff.update({ where: { id }, data: { order: position } })
+        )
+      );
+      revalidatePath("/");
+      return NextResponse.json({ success: true });
+    }
+
+    // Adjacent swap from ↑ ↓ buttons: { id, direction }
+    const { id, direction } = body;
 
     if (!id || !["up", "down"].includes(direction)) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });

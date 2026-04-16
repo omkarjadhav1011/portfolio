@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Code, GitCompareArrows, ChevronUp, ChevronDown } from "lucide-react";
+import { Code, GitCompareArrows, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { FormInput, FormSelect } from "@/components/admin/FormField";
 import { LoadingButton } from "@/components/ui/LoadingButton";
@@ -12,6 +12,21 @@ import { useFormValidation } from "@/hooks/useFormValidation";
 import { skillSchema, skillDiffSchema } from "@/lib/admin-validations";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface Skill {
   id: string;
@@ -48,6 +63,121 @@ const LEVEL_OPTIONS = [1, 2, 3, 4, 5].map((n) => ({
   value: String(n),
   label: `${n} — ${["Learning", "Familiar", "Proficient", "Advanced", "Expert"][n - 1]}`,
 }));
+
+const DIFF_COLORS: Record<string, string> = {
+  added: "text-git-green",
+  modified: "text-git-yellow",
+  deprecated: "text-git-red",
+};
+
+interface SortableRowProps {
+  d: SkillDiff;
+  idx: number;
+  isFirst: boolean;
+  isLast: boolean;
+  reorderingId: string | null;
+  searchActive: boolean;
+  deletingDiffId: string | null;
+  onReorder: (id: string, direction: "up" | "down") => void;
+  onEdit: (d: SkillDiff) => void;
+  onDelete: (id: string) => void;
+}
+
+function SortableRow({
+  d,
+  idx,
+  isFirst,
+  isLast,
+  reorderingId,
+  searchActive,
+  deletingDiffId,
+  onReorder,
+  onEdit,
+  onDelete,
+}: SortableRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: d.id,
+    disabled: searchActive || reorderingId !== null,
+  });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+    position: isDragging ? "relative" : undefined,
+  };
+
+  return (
+    <motion.tr
+      ref={setNodeRef}
+      style={style}
+      layout
+      layoutId={d.id}
+      initial={false}
+      animate={{ opacity: isDragging ? 0.5 : 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ layout: { type: "spring", stiffness: 500, damping: 35 } }}
+      className="border-b border-terminal-border/50 hover:bg-terminal-bg/40 transition-colors"
+    >
+      <td className="px-2 py-2.5 text-center w-6">
+        <button
+          {...attributes}
+          {...listeners}
+          disabled={searchActive || reorderingId !== null}
+          className={`p-0.5 rounded text-text-faint transition-colors ${
+            searchActive || reorderingId !== null
+              ? "opacity-30 cursor-not-allowed"
+              : "cursor-grab hover:text-text-muted active:cursor-grabbing"
+          }`}
+          title={searchActive ? "Clear search to drag" : "Drag to reorder"}
+        >
+          <GripVertical size={14} />
+        </button>
+      </td>
+      <td className="px-3 py-2.5 text-center text-text-faint font-mono text-[10px]">
+        #{idx + 1}
+      </td>
+      <td className={`px-4 py-2.5 font-bold ${DIFF_COLORS[d.type]}`}>
+        {d.type === "added" ? "+" : d.type === "deprecated" ? "-" : "~"} {d.type}
+      </td>
+      <td className={`px-4 py-2.5 ${DIFF_COLORS[d.type]}`}>{d.name}</td>
+      <td className="px-4 py-2.5 text-text-faint">{d.note ?? "—"}</td>
+      <td className="px-4 py-2.5 text-center">
+        <div className="inline-flex gap-1">
+          <button
+            onClick={() => onReorder(d.id, "up")}
+            disabled={isFirst || reorderingId !== null}
+            className="p-0.5 rounded hover:bg-terminal-bg disabled:opacity-30 disabled:cursor-not-allowed text-text-muted hover:text-text-primary transition-colors"
+            title="Move up"
+          >
+            <ChevronUp size={14} />
+          </button>
+          <button
+            onClick={() => onReorder(d.id, "down")}
+            disabled={isLast || reorderingId !== null}
+            className="p-0.5 rounded hover:bg-terminal-bg disabled:opacity-30 disabled:cursor-not-allowed text-text-muted hover:text-text-primary transition-colors"
+            title="Move down"
+          >
+            <ChevronDown size={14} />
+          </button>
+        </div>
+      </td>
+      <td className="px-4 py-2.5 text-right">
+        <button onClick={() => onEdit(d)} className="text-git-blue hover:underline mr-3">edit</button>
+        <LoadingButton
+          variant="danger"
+          loading={deletingDiffId === d.id}
+          loadingText="..."
+          onClick={() => onDelete(d.id)}
+          className="border-0 bg-transparent px-0 hover:bg-transparent hover:underline"
+        >
+          delete
+        </LoadingButton>
+      </td>
+    </motion.tr>
+  );
+}
 
 export function SkillsClient({
   initialBranches,
@@ -226,6 +356,45 @@ export function SkillsClient({
 
   const [reorderingId, setReorderingId] = useState<string | null>(null);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const sorted = [...diffs].sort((a, b) => a.order - b.order);
+    const oldIdx = sorted.findIndex((d) => d.id === active.id);
+    const newIdx = sorted.findIndex((d) => d.id === over.id);
+    const reordered = arrayMove(sorted, oldIdx, newIdx);
+    const updated = reordered.map((d, i) => ({ ...d, order: i + 1 }));
+
+    setDiffs(updated);
+    setReorderingId("drag");
+
+    try {
+      const res = await fetch("/api/admin/stack/reorder", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: updated.map(({ id, order }) => ({ id, position: order })),
+        }),
+      });
+      if (!res.ok) {
+        setDiffs(sorted);
+        toast("Failed to reorder", "error");
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setDiffs(sorted);
+      toast("Failed to reorder", "error");
+    } finally {
+      setReorderingId(null);
+    }
+  }
+
   async function handleReorder(id: string, direction: "up" | "down") {
     const sorted = [...diffs].sort((a, b) => a.order - b.order);
     const idx = sorted.findIndex((d) => d.id === id);
@@ -259,8 +428,6 @@ export function SkillsClient({
       setReorderingId(null);
     }
   }
-
-  const DIFF_COLORS: Record<string, string> = { added: "text-git-green", modified: "text-git-yellow", deprecated: "text-git-red" };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 font-mono">
@@ -341,6 +508,7 @@ export function SkillsClient({
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-terminal-border bg-terminal-bg">
+                <th className="w-6 px-2 py-3" />
                 <th className="text-center px-3 py-3 text-text-muted font-normal w-10">#</th>
                 <th className="text-left px-4 py-3 text-text-muted font-normal">type</th>
                 <th className="text-left px-4 py-3 text-text-muted font-normal">name</th>
@@ -350,10 +518,12 @@ export function SkillsClient({
               </tr>
             </thead>
             <LayoutGroup>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={orderedDiffs.map((d) => d.id)} strategy={verticalListSortingStrategy}>
             <tbody>
               {orderedDiffs.length === 0 && (
                 <tr>
-                  <td colSpan={6}>
+                  <td colSpan={7}>
                     <EmptyState
                       icon={<GitCompareArrows size={32} />}
                       title={diffSearch ? "No diffs match your search" : "No diff entries yet"}
@@ -368,61 +538,25 @@ export function SkillsClient({
                 const isFirst = idx === 0;
                 const isLast = idx === orderedDiffs.length - 1;
                 return (
-                <motion.tr
+                <SortableRow
                   key={d.id}
-                  layout
-                  layoutId={d.id}
-                  initial={false}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ layout: { type: "spring", stiffness: 500, damping: 35 } }}
-                  className="border-b border-terminal-border/50 hover:bg-terminal-bg/40 transition-colors"
-                >
-                  <td className="px-3 py-2.5 text-center text-text-faint font-mono text-[10px]">
-                    #{idx + 1}
-                  </td>
-                  <td className={`px-4 py-2.5 font-bold ${DIFF_COLORS[d.type]}`}>
-                    {d.type === "added" ? "+" : d.type === "deprecated" ? "-" : "~"} {d.type}
-                  </td>
-                  <td className={`px-4 py-2.5 ${DIFF_COLORS[d.type]}`}>{d.name}</td>
-                  <td className="px-4 py-2.5 text-text-faint">{d.note ?? "—"}</td>
-                  <td className="px-4 py-2.5 text-center">
-                    <div className="inline-flex gap-1">
-                      <button
-                        onClick={() => handleReorder(d.id, "up")}
-                        disabled={isFirst || reorderingId !== null}
-                        className="p-0.5 rounded hover:bg-terminal-bg disabled:opacity-30 disabled:cursor-not-allowed text-text-muted hover:text-text-primary transition-colors"
-                        title="Move up"
-                      >
-                        <ChevronUp size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleReorder(d.id, "down")}
-                        disabled={isLast || reorderingId !== null}
-                        className="p-0.5 rounded hover:bg-terminal-bg disabled:opacity-30 disabled:cursor-not-allowed text-text-muted hover:text-text-primary transition-colors"
-                        title="Move down"
-                      >
-                        <ChevronDown size={14} />
-                      </button>
-                    </div>
-                  </td>
-                  <td className="px-4 py-2.5 text-right">
-                    <button onClick={() => openEditDiff(d)} className="text-git-blue hover:underline mr-3">edit</button>
-                    <LoadingButton
-                      variant="danger"
-                      loading={deletingDiffId === d.id}
-                      loadingText="..."
-                      onClick={() => handleDiffDelete(d.id)}
-                      className="border-0 bg-transparent px-0 hover:bg-transparent hover:underline"
-                    >
-                      delete
-                    </LoadingButton>
-                  </td>
-                </motion.tr>
+                  d={d}
+                  idx={idx}
+                  isFirst={isFirst}
+                  isLast={isLast}
+                  reorderingId={reorderingId}
+                  searchActive={!!diffSearch}
+                  deletingDiffId={deletingDiffId}
+                  onReorder={handleReorder}
+                  onEdit={openEditDiff}
+                  onDelete={handleDiffDelete}
+                />
                 );
               })}
               </AnimatePresence>
             </tbody>
+            </SortableContext>
+            </DndContext>
             </LayoutGroup>
           </table>
         </div>
