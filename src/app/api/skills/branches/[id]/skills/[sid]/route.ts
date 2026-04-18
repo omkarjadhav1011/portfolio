@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { isAuthenticated } from "@/lib/auth";
 import { skillSchema } from "@/lib/admin-validations";
 
+export const dynamic = "force-dynamic";
+
 export async function PUT(request: NextRequest, { params }: { params: { id: string; sid: string } }) {
   if (!(await isAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

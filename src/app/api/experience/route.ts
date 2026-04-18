@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { isAuthenticated } from "@/lib/auth";
 import { commitEntrySchema } from "@/lib/admin-validations";
 
+export const dynamic = "force-dynamic";
+
 function serialize(entry: {
   id: string; hash: string; type: string; title: string; org: string;
   date: string; dateEnd: string | null; description: string; branch: string;

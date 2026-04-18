@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { isAuthenticated } from "@/lib/auth";
 import { profileSchema } from "@/lib/admin-validations";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const profile = await prisma.profile.findUnique({ where: { id: "main" } });

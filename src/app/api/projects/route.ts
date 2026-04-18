@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { isAuthenticated } from "@/lib/auth";
 import { projectSchema } from "@/lib/admin-validations";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const projects = await prisma.project.findMany({
