@@ -10,15 +10,7 @@ interface Props {
   params: { slug: string };
 }
 
-export async function generateStaticParams() {
-  try {
-    const projects = await prisma.project.findMany({ select: { slug: true } });
-    return projects.map((p) => ({ slug: p.slug }));
-  } catch {
-    const { projects } = await import("@/data/projects");
-    return projects.map((p) => ({ slug: p.slug }));
-  }
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
