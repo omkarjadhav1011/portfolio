@@ -37,7 +37,7 @@ export function TerminalWindow({
       </div>
 
       {/* Content */}
-      <div className="p-4 md:p-6 text-text-primary leading-relaxed">{children}</div>
+      <div className="p-3 sm:p-4 md:p-6 text-text-primary leading-relaxed overflow-x-auto">{children}</div>
     </div>
   );
 }

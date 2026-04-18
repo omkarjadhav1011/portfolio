@@ -34,6 +34,19 @@ next-env.d.ts
 Thumbs.db
 
 .claude
+.cursor
+.code-review-graph
+.windsurfrules
+.cursorrules
+.opencode.json
+.mcp.json
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+*.ai
+*.prompt
+CLAUDE.md
+Gemini.md
 
 # Prisma
 prisma/dev.db

@@ -12,6 +12,11 @@ const StatusBar = dynamic(
   { ssr: false }
 );
 
+const FloatingAIButton = dynamic(
+  () => import("@/components/ui/FloatingAIButton").then((m) => m.FloatingAIButton),
+  { ssr: false }
+);
+
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
@@ -20,6 +25,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <main className="pb-7">{children}</main>
       <Footer />
       <StatusBar />
+      <FloatingAIButton />
     </>
   );
 }

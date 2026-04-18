@@ -1,9 +1,23 @@
 import type { Metadata } from "next";
+import { JetBrains_Mono, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "@/styles/globals.css";
 import { profile } from "@/data/profile";
+import { Providers } from "@/components/layout/Providers";
 
-const BASE_URL = "https://omkarjadhav.vercel.app";
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://omkarjadhav.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -61,9 +75,23 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html
+      lang="en"
+      className={`dark ${jetbrainsMono.variable} ${inter.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        {/* Prevent FOUC: sync theme class before React hydrates */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||(!t||t==='system')&&window.matchMedia('(prefers-color-scheme:dark)').matches;if(!d)document.documentElement.classList.remove('dark')}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className="relative">
-        {children}
+        <Providers>
+          {children}
+        </Providers>
         <Analytics />
       </body>
     </html>

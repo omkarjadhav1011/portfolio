@@ -29,7 +29,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex flex-col items-center justify-center px-4 py-20 overflow-hidden"
+      className="relative min-h-screen flex flex-col items-center justify-center px-4 py-14 sm:py-20 overflow-hidden"
     >
       {/* Subtle grid background */}
       <div className="absolute inset-0 bg-grid-pattern bg-grid opacity-40 pointer-events-none" />
@@ -38,23 +38,55 @@ export function HeroSection({ profile }: HeroSectionProps) {
 
       <div className="relative w-full max-w-5xl mx-auto">
         {/* Two-column layout: terminal left, name right */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-          {/* Left column: terminal boot sequence */}
-          <TerminalWindow
-            title={`${profile.handle}@portfolio: ~`}
-            className="w-full"
-          >
-            <TypewriterText
-              lines={bootLines}
-              startDelay={800}
-              lineColors={{
-                0: "text-git-green",
-                5: "text-git-green",
-                6: "text-git-green",
-                8: "text-git-green",
-              }}
-            />
-          </TerminalWindow>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-center">
+          {/* Left column: terminal — compact static on mobile, full animated on desktop */}
+          <div>
+            {/* Mobile: compact static 3-line terminal */}
+            <div className="block md:hidden">
+              <TerminalWindow
+                title={`${profile.handle}@portfolio: ~`}
+                className="w-full"
+              >
+                <div className="space-y-1.5 font-mono text-sm">
+                  <div className="flex gap-2">
+                    <span className="text-git-green shrink-0">$</span>
+                    <span className="text-text-muted break-all">
+                      git clone github.com/{profile.handle}/portfolio
+                    </span>
+                  </div>
+                  <div className="pl-5 text-text-faint text-xs">
+                    Cloning into &apos;portfolio&apos;... done.
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-git-green shrink-0">$</span>
+                    <span className="text-text-muted">cat README.md</span>
+                  </div>
+                  <div className="pl-5">
+                    <span className="inline-block w-2 h-4 bg-git-green animate-cursor-blink align-text-bottom" />
+                  </div>
+                </div>
+              </TerminalWindow>
+            </div>
+
+            {/* Desktop: full animated boot sequence */}
+            <div className="hidden md:block">
+              <TerminalWindow
+                title={`${profile.handle}@portfolio: ~`}
+                className="w-full"
+              >
+                <TypewriterText
+                  lines={bootLines}
+                  startDelay={800}
+                  lineColors={{
+                    0: "text-git-green",
+                    5: "text-git-green",
+                    6: "text-git-green",
+                    8: "text-git-green",
+                  }}
+                />
+              </TerminalWindow>
+            </div>
+          </div>
 
           {/* Right column: name and CTAs */}
           <motion.div
@@ -68,8 +100,8 @@ export function HeroSection({ profile }: HeroSectionProps) {
                 # {profile.handle}
               </span>
               <span
-                className="block text-5xl md:text-6xl font-bold text-text-primary"
-                style={{ textShadow: "0 0 8px rgba(0,255,136,0.4)" }}
+                className="block text-4xl sm:text-5xl md:text-6xl font-bold text-text-primary"
+                style={{ textShadow: "0 0 8px rgb(var(--color-text-glow))" }}
               >
                 {profile.name}
               </span>
@@ -92,7 +124,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="flex flex-wrap justify-center md:justify-start gap-3 pt-2"
+              className="flex flex-col sm:flex-row flex-wrap justify-center md:justify-start gap-2 sm:gap-3 pt-2"
             >
               <a
                 href="#projects"
@@ -100,7 +132,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
                   e.preventDefault();
                   document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="group flex items-center gap-2 px-4 py-2 rounded-lg border border-git-blue/40 bg-git-blue/10 text-git-blue text-sm font-mono hover:bg-git-blue/20 hover:border-git-blue/70 transition-all duration-200"
+                className="group flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto px-3 sm:px-4 py-2 rounded-lg border border-git-blue/40 bg-git-blue/10 text-git-blue text-xs sm:text-sm font-mono hover:bg-git-blue/20 hover:border-git-blue/70 transition-all duration-200"
               >
                 <span className="text-text-muted">$</span>
                 git checkout projects
@@ -111,7 +143,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
                   e.preventDefault();
                   document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-git-green/40 bg-git-green/10 text-git-green text-sm font-mono hover:bg-git-green/20 hover:border-git-green/70 transition-all duration-200"
+                className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto px-3 sm:px-4 py-2 rounded-lg border border-git-green/40 bg-git-green/10 text-git-green text-xs sm:text-sm font-mono hover:bg-git-green/20 hover:border-git-green/70 transition-all duration-200"
               >
                 <span className="text-text-muted">$</span>
                 git show --contact
@@ -121,7 +153,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
                 download
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-git-purple/40 bg-git-purple/10 text-git-purple text-sm font-mono hover:bg-git-purple/20 hover:border-git-purple/70 transition-all duration-200"
+                className="flex items-center justify-center sm:justify-start gap-2 w-full sm:w-auto px-3 sm:px-4 py-2 rounded-lg border border-git-purple/40 bg-git-purple/10 text-git-purple text-xs sm:text-sm font-mono hover:bg-git-purple/20 hover:border-git-purple/70 transition-all duration-200"
               >
                 <span className="text-text-muted">$</span>
                 git export --resume
@@ -135,7 +167,7 @@ export function HeroSection({ profile }: HeroSectionProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
-          className="flex justify-center mt-12"
+          className="flex justify-center mt-8 sm:mt-12"
         >
           <div className="flex flex-col items-center gap-1 text-text-faint text-xs font-mono animate-float">
             <span>scroll</span>

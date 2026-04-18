@@ -3,8 +3,12 @@
 import { useState } from "react";
 import { FormInput, FormTextarea, FormCheckbox } from "@/components/admin/FormField";
 import { TagInput } from "@/components/admin/TagInput";
+import { LoadingButton } from "@/components/ui/LoadingButton";
 import { useToast } from "@/components/admin/ToastProvider";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { profileSchema } from "@/lib/admin-validations";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 interface SocialLink {
   label: string;
@@ -32,6 +36,7 @@ export function ProfileClient({ initialProfile }: { initialProfile: Profile }) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { errors, validate, clearErrors } = useFormValidation(profileSchema);
 
   function field(key: keyof Profile, value: unknown) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -52,6 +57,7 @@ export function ProfileClient({ initialProfile }: { initialProfile: Profile }) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!validate(form)) return;
     setLoading(true);
     try {
       const res = await fetch("/api/profile", {
@@ -74,7 +80,7 @@ export function ProfileClient({ initialProfile }: { initialProfile: Profile }) {
   const inputClass = "w-full bg-terminal-bg border border-terminal-border rounded-lg px-3 py-2 font-mono text-xs text-text-primary placeholder-text-faint focus:outline-none focus:border-git-blue/50 focus:ring-1 focus:ring-git-blue/20 transition-colors";
 
   return (
-    <div className="space-y-6 font-mono">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 font-mono">
       <div>
         <div className="text-text-faint text-xs mb-1">$ git config --global user.profile</div>
         <h1 className="text-xl font-bold text-text-primary">Profile</h1>
@@ -85,14 +91,14 @@ export function ProfileClient({ initialProfile }: { initialProfile: Profile }) {
         <div className="rounded-xl border border-terminal-border bg-terminal-surface p-5 space-y-4">
           <div className="text-text-faint text-xs border-b border-terminal-border pb-2">## Basic Info</div>
           <div className="grid grid-cols-2 gap-3">
-            <FormInput label="name" value={form.name} onChange={(e) => field("name", e.target.value)} required />
-            <FormInput label="handle" value={form.handle} onChange={(e) => field("handle", e.target.value)} required placeholder="omkarjadhav" />
+            <FormInput label="name" value={form.name} onChange={(e) => field("name", e.target.value)} error={errors.name} required />
+            <FormInput label="handle" value={form.handle} onChange={(e) => field("handle", e.target.value)} error={errors.handle} required placeholder="omkarjadhav" />
           </div>
-          <FormInput label="headline" value={form.headline} onChange={(e) => field("headline", e.target.value)} required />
-          <FormTextarea label="bio" value={form.bio} onChange={(e) => field("bio", e.target.value)} rows={5} required />
+          <FormInput label="headline" value={form.headline} onChange={(e) => field("headline", e.target.value)} error={errors.headline} required />
+          <FormTextarea label="bio" value={form.bio} onChange={(e) => field("bio", e.target.value)} error={errors.bio} rows={5} required />
           <div className="grid grid-cols-2 gap-3">
-            <FormInput label="email" type="email" value={form.email} onChange={(e) => field("email", e.target.value)} required />
-            <FormInput label="location" value={form.location} onChange={(e) => field("location", e.target.value)} required />
+            <FormInput label="email" type="email" value={form.email} onChange={(e) => field("email", e.target.value)} error={errors.email} required />
+            <FormInput label="location" value={form.location} onChange={(e) => field("location", e.target.value)} error={errors.location} required />
           </div>
         </div>
 
@@ -100,8 +106,8 @@ export function ProfileClient({ initialProfile }: { initialProfile: Profile }) {
         <div className="rounded-xl border border-terminal-border bg-terminal-surface p-5 space-y-4">
           <div className="text-text-faint text-xs border-b border-terminal-border pb-2">## Git Status</div>
           <div className="grid grid-cols-2 gap-3">
-            <FormInput label="current branch" value={form.currentBranch} onChange={(e) => field("currentBranch", e.target.value)} required placeholder="main" />
-            <FormInput label="current status" value={form.currentStatus} onChange={(e) => field("currentStatus", e.target.value)} required placeholder="Open to internships" />
+            <FormInput label="current branch" value={form.currentBranch} onChange={(e) => field("currentBranch", e.target.value)} error={errors.currentBranch} required placeholder="main" />
+            <FormInput label="current status" value={form.currentStatus} onChange={(e) => field("currentStatus", e.target.value)} error={errors.currentStatus} required placeholder="Open to internships" />
           </div>
           <FormCheckbox label="available for work" checked={form.availableForWork} onChange={(v) => field("availableForWork", v)} />
         </div>
@@ -140,14 +146,15 @@ export function ProfileClient({ initialProfile }: { initialProfile: Profile }) {
           <TagInput label="stash (hobbies/interests)" values={form.stash ?? []} onChange={(v) => field("stash", v)} placeholder="☕ Coffee-driven development" />
         </div>
 
-        <button
+        <LoadingButton
           type="submit"
-          disabled={loading}
-          className="w-full py-2.5 rounded-lg border border-git-green/40 bg-git-green/10 text-git-green text-xs hover:bg-git-green/20 transition-all disabled:opacity-50"
+          loading={loading}
+          loadingText="Saving..."
+          className="w-full py-2.5"
         >
-          {loading ? "Saving..." : "$ git commit -m 'update: profile'"}
-        </button>
+          $ git commit -m &apos;update: profile&apos;
+        </LoadingButton>
       </form>
-    </div>
+    </motion.div>
   );
 }
