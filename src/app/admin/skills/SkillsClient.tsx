@@ -374,10 +374,11 @@ export function SkillsClient({
     setReorderingId("drag");
 
     try {
-      const res = await fetch("/api/admin/stack/reorder", {
+      const res = await fetch("/api/admin/reorder", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          type: "stack",
           items: updated.map(({ id, order }) => ({ id, position: order })),
         }),
       });
@@ -410,10 +411,10 @@ export function SkillsClient({
     setReorderingId(id);
 
     try {
-      const res = await fetch("/api/admin/stack/reorder", {
+      const res = await fetch("/api/admin/reorder", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, direction }),
+        body: JSON.stringify({ type: "stack", id, direction }),
       });
       if (!res.ok) {
         setDiffs(sorted); // revert
@@ -504,6 +505,7 @@ export function SkillsClient({
 
         <TableSearch value={diffSearch} onChange={setDiffSearch} placeholder="Search diffs..." className="mb-3" />
 
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <div className="rounded-xl border border-terminal-border bg-terminal-surface overflow-hidden">
           <table className="w-full text-xs">
             <thead>
@@ -517,9 +519,8 @@ export function SkillsClient({
                 <th className="text-right px-4 py-3 text-text-muted font-normal">actions</th>
               </tr>
             </thead>
-            <LayoutGroup>
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={orderedDiffs.map((d) => d.id)} strategy={verticalListSortingStrategy}>
+            <LayoutGroup>
             <tbody>
               {orderedDiffs.length === 0 && (
                 <tr>
@@ -555,11 +556,11 @@ export function SkillsClient({
               })}
               </AnimatePresence>
             </tbody>
-            </SortableContext>
-            </DndContext>
             </LayoutGroup>
+            </SortableContext>
           </table>
         </div>
+        </DndContext>
       </div>
 
       {/* Skill Modal */}

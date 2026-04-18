@@ -6,7 +6,9 @@ import { projectSchema } from "@/lib/admin-validations";
 
 export async function GET() {
   try {
-    const projects = await prisma.project.findMany({ orderBy: { pinned: "desc" } });
+    const projects = await prisma.project.findMany({
+      orderBy: [{ order: "asc" }, { pinned: "desc" }],
+    });
     return NextResponse.json(
       projects.map((p) => ({ ...p, tags: JSON.parse(p.tags) }))
     );
@@ -24,12 +26,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = projectSchema.parse(body);
 
+    const maxOrder = await prisma.project.aggregate({ _max: { order: true } });
+    const nextOrder = (maxOrder._max.order ?? 0) + 1;
+
     const project = await prisma.project.create({
       data: {
         ...data,
         tags: JSON.stringify(data.tags),
         liveUrl: data.liveUrl || null,
         repoUrl: data.repoUrl || null,
+        order: nextOrder,
       },
     });
 

@@ -8,13 +8,15 @@ import { TagInput } from "@/components/admin/TagInput";
 import { LoadingButton } from "@/components/ui/LoadingButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSearch } from "@/components/admin/TableSearch";
-import { SortableHeader } from "@/components/admin/SortableHeader";
+import { SortableTr, DragHandleCell, ReorderButtonsCell } from "@/components/admin/SortableTr";
 import { useToast } from "@/components/admin/ToastProvider";
 import { useFormValidation } from "@/hooks/useFormValidation";
-import { useTableSort } from "@/hooks/useTableSort";
+import { useReorder } from "@/hooks/useReorder";
 import { commitEntrySchema } from "@/lib/admin-validations";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { DndContext, closestCenter } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 interface CommitEntry {
   id: string;
@@ -30,9 +32,10 @@ interface CommitEntry {
   colorKey?: string | null;
   tags?: string[] | null;
   url?: string | null;
+  order: number;
 }
 
-const EMPTY: Omit<CommitEntry, "id"> = {
+const EMPTY: Omit<CommitEntry, "id" | "order"> = {
   hash: "", type: "job", title: "", org: "", date: "", dateEnd: "",
   description: [], branch: "", branchColor: "#00ff88", colorKey: "green",
   tags: [], url: "",
@@ -52,11 +55,12 @@ const COLOR_OPTIONS = [
   { value: "orange", label: "orange" },
 ];
 
+const TYPE_ICONS: Record<string, string> = { job: "💼", education: "🎓", achievement: "🏆", project: "📁" };
+
 export function ExperienceClient({ initialEntries }: { initialEntries: CommitEntry[] }) {
-  const [entries, setEntries] = useState(initialEntries);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<CommitEntry | null>(null);
-  const [form, setForm] = useState<Omit<CommitEntry, "id">>(EMPTY);
+  const [form, setForm] = useState<Omit<CommitEntry, "id" | "order">>(EMPTY);
   const [descText, setDescText] = useState("");
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -65,17 +69,22 @@ export function ExperienceClient({ initialEntries }: { initialEntries: CommitEnt
   const router = useRouter();
   const { errors, validate, clearErrors } = useFormValidation(commitEntrySchema);
 
-  // Search filter
-  const filtered = useMemo(() => {
-    if (!search.trim()) return entries;
-    const q = search.toLowerCase();
-    return entries.filter(
-      (e) => e.title.toLowerCase().includes(q) || e.org.toLowerCase().includes(q) || e.type.toLowerCase().includes(q)
-    );
-  }, [entries, search]);
+  const { items: entries, setItems: setEntries, sensors, handleDragEnd, handleReorder, reorderingId } =
+    useReorder(initialEntries, { type: "experience", toast });
 
-  // Sort
-  const { sorted, sortKey, sortDir, toggleSort } = useTableSort(filtered, "title" as keyof CommitEntry);
+  const searchActive = search.trim() !== "";
+
+  const displayItems = useMemo(() => {
+    const base = [...entries].sort((a, b) => a.order - b.order);
+    if (!searchActive) return base;
+    const q = search.toLowerCase();
+    return base.filter(
+      (e) =>
+        e.title.toLowerCase().includes(q) ||
+        e.org.toLowerCase().includes(q) ||
+        e.type.toLowerCase().includes(q)
+    );
+  }, [entries, search, searchActive]);
 
   function openCreate() {
     setEditing(null);
@@ -130,7 +139,7 @@ export function ExperienceClient({ initialEntries }: { initialEntries: CommitEnt
           setEntries((prev) => prev.map((e) => (e.id === saved.id ? saved : e)));
           toast("Entry updated", "success");
         } else {
-          setEntries((prev) => [saved, ...prev]);
+          setEntries((prev) => [...prev, saved]);
           toast("Entry created", "success");
         }
         setModalOpen(false);
@@ -147,8 +156,6 @@ export function ExperienceClient({ initialEntries }: { initialEntries: CommitEnt
   function field(key: keyof typeof form, value: string | string[]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
-
-  const TYPE_ICONS: Record<string, string> = { job: "💼", education: "🎓", achievement: "🏆", project: "📁" };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 font-mono">
@@ -169,57 +176,75 @@ export function ExperienceClient({ initialEntries }: { initialEntries: CommitEnt
       {/* Search */}
       <TableSearch value={search} onChange={setSearch} placeholder="Search entries..." />
 
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="rounded-xl border border-terminal-border bg-terminal-surface overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-terminal-border bg-terminal-bg">
+                <th className="px-2 py-3 w-6" />
                 <th className="text-left px-4 py-3 text-text-muted font-normal">hash</th>
-                <SortableHeader label="type" sortKey="type" currentKey={String(sortKey)} currentDir={sortDir} onSort={() => toggleSort("type" as keyof CommitEntry)} className="px-4 py-3" />
-                <SortableHeader label="title" sortKey="title" currentKey={String(sortKey)} currentDir={sortDir} onSort={() => toggleSort("title" as keyof CommitEntry)} className="px-4 py-3" />
+                <th className="text-left px-4 py-3 text-text-muted font-normal">type</th>
+                <th className="text-left px-4 py-3 text-text-muted font-normal">title</th>
                 <th className="text-left px-4 py-3 text-text-muted font-normal">org</th>
-                <SortableHeader label="date" sortKey="date" currentKey={String(sortKey)} currentDir={sortDir} onSort={() => toggleSort("date" as keyof CommitEntry)} className="px-4 py-3" />
+                <th className="text-left px-4 py-3 text-text-muted font-normal">date</th>
+                <th className="px-3 py-3 text-center text-text-muted font-normal w-16">order</th>
                 <th className="text-right px-4 py-3 text-text-muted font-normal">actions</th>
               </tr>
             </thead>
-            <tbody>
-              {sorted.length === 0 && (
-                <tr>
-                  <td colSpan={6}>
-                    <EmptyState
-                      icon={<Briefcase size={32} />}
-                      title={search ? "No entries match your search" : "No entries yet"}
-                      description={search ? "Try a different search term" : "Add your first commit entry"}
-                      action={!search ? { label: "+ new entry", onClick: openCreate } : undefined}
-                    />
-                  </td>
-                </tr>
-              )}
-              {sorted.map((e) => (
-                <tr key={e.id} className="border-b border-terminal-border/50 hover:bg-terminal-bg/40 transition-colors">
-                  <td className="px-4 py-3 text-git-orange font-mono">{e.hash.slice(0, 7)}</td>
-                  <td className="px-4 py-3">{TYPE_ICONS[e.type]} {e.type}</td>
-                  <td className="px-4 py-3 text-text-primary">{e.title}</td>
-                  <td className="px-4 py-3 text-text-muted">{e.org}</td>
-                  <td className="px-4 py-3 text-text-faint">{e.date}{e.dateEnd ? ` — ${e.dateEnd}` : ""}</td>
-                  <td className="px-4 py-3 text-right">
-                    <button onClick={() => openEdit(e)} className="text-git-blue hover:underline mr-3">edit</button>
-                    <LoadingButton
-                      variant="danger"
-                      loading={deletingId === e.id}
-                      loadingText="..."
-                      onClick={() => handleDelete(e.id)}
-                      className="border-0 bg-transparent px-0 hover:bg-transparent hover:underline"
-                    >
-                      delete
-                    </LoadingButton>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+            <SortableContext items={displayItems.map((e) => e.id)} strategy={verticalListSortingStrategy}>
+              <LayoutGroup>
+                <tbody>
+                    {displayItems.length === 0 && (
+                      <tr>
+                        <td colSpan={8}>
+                          <EmptyState
+                            icon={<Briefcase size={32} />}
+                            title={search ? "No entries match your search" : "No entries yet"}
+                            description={search ? "Try a different search term" : "Add your first commit entry"}
+                            action={!search ? { label: "+ new entry", onClick: openCreate } : undefined}
+                          />
+                        </td>
+                      </tr>
+                    )}
+                    <AnimatePresence>
+                      {displayItems.map((e, idx) => (
+                        <SortableTr key={e.id} id={e.id} disabled={searchActive || reorderingId !== null}>
+                          <DragHandleCell />
+                          <td className="px-4 py-3 text-git-orange font-mono">{e.hash.slice(0, 7)}</td>
+                          <td className="px-4 py-3">{TYPE_ICONS[e.type]} {e.type}</td>
+                          <td className="px-4 py-3 text-text-primary">{e.title}</td>
+                          <td className="px-4 py-3 text-text-muted">{e.org}</td>
+                          <td className="px-4 py-3 text-text-faint">{e.date}{e.dateEnd ? ` — ${e.dateEnd}` : ""}</td>
+                          <ReorderButtonsCell
+                            id={e.id}
+                            isFirst={idx === 0}
+                            isLast={idx === displayItems.length - 1}
+                            reorderingId={reorderingId}
+                            onReorder={handleReorder}
+                          />
+                          <td className="px-4 py-3 text-right">
+                            <button onClick={() => openEdit(e)} className="text-git-blue hover:underline mr-3">edit</button>
+                            <LoadingButton
+                              variant="danger"
+                              loading={deletingId === e.id}
+                              loadingText="..."
+                              onClick={() => handleDelete(e.id)}
+                              className="border-0 bg-transparent px-0 hover:bg-transparent hover:underline"
+                            >
+                              delete
+                            </LoadingButton>
+                          </td>
+                        </SortableTr>
+                      ))}
+                    </AnimatePresence>
+                </tbody>
+              </LayoutGroup>
+            </SortableContext>
           </table>
         </div>
       </div>
+      </DndContext>
 
       <AdminModal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? `edit — ${editing.hash}` : "new entry"}>
         <form onSubmit={handleSubmit} className="space-y-4">

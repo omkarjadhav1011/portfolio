@@ -42,11 +42,11 @@ const ContactSection = dynamic(
 async function getPageData() {
   try {
     const [rawProjects, rawProfile, rawBranches, rawDiffs, rawTimeline] = await Promise.all([
-      prisma.project.findMany({ orderBy: { pinned: "desc" } }),
+      prisma.project.findMany({ orderBy: [{ order: "asc" }, { pinned: "desc" }] }),
       prisma.profile.findUnique({ where: { id: "main" } }),
       prisma.skillBranch.findMany({ include: { skills: true }, orderBy: { offset: "asc" } }),
       prisma.skillDiff.findMany({ orderBy: { order: "asc" } }),
-      prisma.commitEntry.findMany({ orderBy: { date: "desc" } }),
+      prisma.commitEntry.findMany({ orderBy: { order: "asc" } }),
     ]);
 
     const projects: Project[] = rawProjects.map((p) => ({

@@ -19,7 +19,7 @@ function serialize(entry: {
 
 export async function GET() {
   try {
-    const entries = await prisma.commitEntry.findMany({ orderBy: { date: "desc" } });
+    const entries = await prisma.commitEntry.findMany({ orderBy: { order: "asc" } });
     return NextResponse.json(entries.map(serialize));
   } catch {
     return NextResponse.json({ error: "Failed to fetch experience" }, { status: 500 });
@@ -35,6 +35,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = commitEntrySchema.parse(body);
 
+    const maxOrder = await prisma.commitEntry.aggregate({ _max: { order: true } });
+    const nextOrder = (maxOrder._max.order ?? 0) + 1;
+
     const entry = await prisma.commitEntry.create({
       data: {
         ...data,
@@ -43,6 +46,7 @@ export async function POST(request: NextRequest) {
         url: data.url || null,
         dateEnd: data.dateEnd || null,
         colorKey: data.colorKey || null,
+        order: nextOrder,
       },
     });
 

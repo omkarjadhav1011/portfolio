@@ -8,13 +8,15 @@ import { TagInput } from "@/components/admin/TagInput";
 import { LoadingButton } from "@/components/ui/LoadingButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TableSearch } from "@/components/admin/TableSearch";
-import { SortableHeader } from "@/components/admin/SortableHeader";
+import { SortableTr, DragHandleCell, ReorderButtonsCell } from "@/components/admin/SortableTr";
 import { useToast } from "@/components/admin/ToastProvider";
 import { useFormValidation } from "@/hooks/useFormValidation";
-import { useTableSort } from "@/hooks/useTableSort";
+import { useReorder } from "@/hooks/useReorder";
 import { projectSchema } from "@/lib/admin-validations";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
+import { DndContext, closestCenter } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 interface Project {
   id: string;
@@ -34,9 +36,10 @@ interface Project {
   status: string;
   pinned: boolean;
   longDescription?: string | null;
+  order: number;
 }
 
-const EMPTY: Omit<Project, "id"> = {
+const EMPTY: Omit<Project, "id" | "order"> = {
   slug: "", repoName: "", description: "", language: "", languageColor: "#3178c6",
   stars: 0, forks: 0, commits: 0, lastCommit: "just now", lastCommitMsg: "",
   tags: [], liveUrl: "", repoUrl: "", status: "active", pinned: false, longDescription: "",
@@ -48,11 +51,16 @@ const STATUS_OPTIONS = [
   { value: "archived", label: "archived" },
 ];
 
+const STATUS_COLORS: Record<string, string> = {
+  active: "text-git-green",
+  wip: "text-git-yellow",
+  archived: "text-text-muted",
+};
+
 export function ProjectsClient({ initialProjects }: { initialProjects: Project[] }) {
-  const [projects, setProjects] = useState(initialProjects);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
-  const [form, setForm] = useState<Omit<Project, "id">>(EMPTY);
+  const [form, setForm] = useState<Omit<Project, "id" | "order">>(EMPTY);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -60,17 +68,22 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
   const router = useRouter();
   const { errors, validate, clearErrors } = useFormValidation(projectSchema);
 
-  // Search filter
-  const filtered = useMemo(() => {
-    if (!search.trim()) return projects;
-    const q = search.toLowerCase();
-    return projects.filter(
-      (p) => p.repoName.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || p.language.toLowerCase().includes(q)
-    );
-  }, [projects, search]);
+  const { items: projects, setItems: setProjects, sensors, handleDragEnd, handleReorder, reorderingId } =
+    useReorder(initialProjects, { type: "projects", toast });
 
-  // Sort
-  const { sorted, sortKey, sortDir, toggleSort } = useTableSort(filtered, "repoName" as keyof Project);
+  const searchActive = search.trim() !== "";
+
+  const displayItems = useMemo(() => {
+    const base = [...projects].sort((a, b) => a.order - b.order);
+    if (!searchActive) return base;
+    const q = search.toLowerCase();
+    return base.filter(
+      (p) =>
+        p.repoName.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.language.toLowerCase().includes(q)
+    );
+  }, [projects, search, searchActive]);
 
   function openCreate() {
     setEditing(null);
@@ -122,7 +135,7 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
           setProjects((prev) => prev.map((p) => (p.id === saved.id ? saved : p)));
           toast("Project updated", "success");
         } else {
-          setProjects((prev) => [saved, ...prev]);
+          setProjects((prev) => [...prev, saved]);
           toast("Project created", "success");
         }
         setModalOpen(false);
@@ -139,12 +152,6 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
   function field(key: keyof typeof form, value: string | number | boolean | string[]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
-
-  const STATUS_COLORS: Record<string, string> = {
-    active: "text-git-green",
-    wip: "text-git-yellow",
-    archived: "text-text-muted",
-  };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 font-mono">
@@ -167,68 +174,81 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
       <TableSearch value={search} onChange={setSearch} placeholder="Search projects..." />
 
       {/* Table */}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="rounded-xl border border-terminal-border bg-terminal-surface overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-terminal-border bg-terminal-bg">
-                <SortableHeader label="repo" sortKey="repoName" currentKey={String(sortKey)} currentDir={sortDir} onSort={() => toggleSort("repoName" as keyof Project)} className="px-4 py-3" />
-                <SortableHeader label="lang" sortKey="language" currentKey={String(sortKey)} currentDir={sortDir} onSort={() => toggleSort("language" as keyof Project)} className="px-4 py-3" />
-                <SortableHeader label="status" sortKey="status" currentKey={String(sortKey)} currentDir={sortDir} onSort={() => toggleSort("status" as keyof Project)} className="px-4 py-3" />
+                <th className="px-2 py-3 w-6" />
+                <th className="text-left px-4 py-3 text-text-muted font-normal">repo</th>
+                <th className="text-left px-4 py-3 text-text-muted font-normal">lang</th>
+                <th className="text-left px-4 py-3 text-text-muted font-normal">status</th>
                 <th className="text-left px-4 py-3 text-text-muted font-normal">pinned</th>
+                <th className="px-3 py-3 text-center text-text-muted font-normal w-16">order</th>
                 <th className="text-right px-4 py-3 text-text-muted font-normal">actions</th>
               </tr>
             </thead>
-            <tbody>
-              {sorted.length === 0 && (
-                <tr>
-                  <td colSpan={5}>
-                    <EmptyState
-                      icon={<Folder size={32} />}
-                      title={search ? "No projects match your search" : "No projects yet"}
-                      description={search ? "Try a different search term" : "Create your first repository to get started"}
-                      action={!search ? { label: "+ new project", onClick: openCreate } : undefined}
-                    />
-                  </td>
-                </tr>
-              )}
-              {sorted.map((p) => (
-                <tr key={p.id} className="border-b border-terminal-border/50 hover:bg-terminal-bg/40 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="text-text-primary">{p.repoName}</div>
-                    <div className="text-text-faint text-[10px] truncate max-w-[200px]">{p.description}</div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.languageColor }} />
-                      {p.language}
-                    </span>
-                  </td>
-                  <td className={`px-4 py-3 ${STATUS_COLORS[p.status] ?? "text-text-muted"}`}>{p.status}</td>
-                  <td className="px-4 py-3 text-text-muted">{p.pinned ? "📌" : "—"}</td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => openEdit(p)}
-                      className="text-git-blue hover:underline mr-3"
-                    >
-                      edit
-                    </button>
-                    <LoadingButton
-                      variant="danger"
-                      loading={deletingId === p.id}
-                      loadingText="..."
-                      onClick={() => handleDelete(p.id)}
-                      className="border-0 bg-transparent px-0 hover:bg-transparent hover:underline"
-                    >
-                      delete
-                    </LoadingButton>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+            <SortableContext items={displayItems.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+              <LayoutGroup>
+                <tbody>
+                    {displayItems.length === 0 && (
+                      <tr>
+                        <td colSpan={7}>
+                          <EmptyState
+                            icon={<Folder size={32} />}
+                            title={search ? "No projects match your search" : "No projects yet"}
+                            description={search ? "Try a different search term" : "Create your first repository to get started"}
+                            action={!search ? { label: "+ new project", onClick: openCreate } : undefined}
+                          />
+                        </td>
+                      </tr>
+                    )}
+                    <AnimatePresence>
+                      {displayItems.map((p, idx) => (
+                        <SortableTr key={p.id} id={p.id} disabled={searchActive || reorderingId !== null}>
+                          <DragHandleCell />
+                          <td className="px-4 py-3">
+                            <div className="text-text-primary">{p.repoName}</div>
+                            <div className="text-text-faint text-[10px] truncate max-w-[200px]">{p.description}</div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: p.languageColor }} />
+                              {p.language}
+                            </span>
+                          </td>
+                          <td className={`px-4 py-3 ${STATUS_COLORS[p.status] ?? "text-text-muted"}`}>{p.status}</td>
+                          <td className="px-4 py-3 text-text-muted">{p.pinned ? "📌" : "—"}</td>
+                          <ReorderButtonsCell
+                            id={p.id}
+                            isFirst={idx === 0}
+                            isLast={idx === displayItems.length - 1}
+                            reorderingId={reorderingId}
+                            onReorder={handleReorder}
+                          />
+                          <td className="px-4 py-3 text-right">
+                            <button onClick={() => openEdit(p)} className="text-git-blue hover:underline mr-3">edit</button>
+                            <LoadingButton
+                              variant="danger"
+                              loading={deletingId === p.id}
+                              loadingText="..."
+                              onClick={() => handleDelete(p.id)}
+                              className="border-0 bg-transparent px-0 hover:bg-transparent hover:underline"
+                            >
+                              delete
+                            </LoadingButton>
+                          </td>
+                        </SortableTr>
+                      ))}
+                    </AnimatePresence>
+                </tbody>
+              </LayoutGroup>
+            </SortableContext>
           </table>
         </div>
       </div>
+      </DndContext>
 
       {/* Modal */}
       <AdminModal
@@ -267,20 +287,10 @@ export function ProjectsClient({ initialProjects }: { initialProjects: Project[]
           <FormTextarea label="long description" value={form.longDescription ?? ""} onChange={(e) => field("longDescription", e.target.value)} rows={4} />
 
           <div className="flex gap-2 pt-2">
-            <LoadingButton
-              type="submit"
-              loading={loading}
-              loadingText="Saving..."
-              className="flex-1 py-2"
-            >
+            <LoadingButton type="submit" loading={loading} loadingText="Saving..." className="flex-1 py-2">
               {editing ? "$ git commit --amend" : "$ git commit -m 'new project'"}
             </LoadingButton>
-            <LoadingButton
-              type="button"
-              variant="ghost"
-              onClick={() => setModalOpen(false)}
-              className="px-4 py-2"
-            >
+            <LoadingButton type="button" variant="ghost" onClick={() => setModalOpen(false)} className="px-4 py-2">
               cancel
             </LoadingButton>
           </div>
