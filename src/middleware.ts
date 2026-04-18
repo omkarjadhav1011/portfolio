@@ -46,8 +46,8 @@ async function verifyHs256Jwt(token: string, secretValue: string): Promise<boole
     return crypto.subtle.verify(
       "HMAC",
       key,
-      decodeBase64Url(signaturePart),
-      new TextEncoder().encode(`${headerPart}.${payloadPart}`)
+      decodeBase64Url(signaturePart).buffer as ArrayBuffer,
+      new TextEncoder().encode(`${headerPart}.${payloadPart}`).buffer as ArrayBuffer
     );
   } catch {
     return false;
