@@ -98,5 +98,16 @@ model Profile {
   socials          String   // JSON: SocialLink[]
   funFacts         String   // JSON: string[]
   stash            String?  // JSON: string[]
+  // Currently working at — LinkedIn-style strip
+  currentRoleEnabled  Boolean @default(false)
+  currentRoleTitle    String?
+  currentRoleCompany  String?
+  currentRoleMonogram String?
+  currentRoleLogoUrl  String?
+  currentRoleUrl      String?
+  currentRoleLocation String?
+  currentRoleStarted  String?
+  currentRoleTenure   String?
+  currentRoleAccent   String? // hex color for accent (e.g. #00ff88)
   updatedAt        DateTime @updatedAt
 }

@@ -16,6 +16,19 @@ interface SocialLink {
   icon: string;
 }
 
+interface CurrentRole {
+  enabled: boolean;
+  title: string;
+  company: string;
+  monogram?: string;
+  logoUrl?: string;
+  url?: string;
+  location?: string;
+  startedAt: string;
+  tenure?: string;
+  accent?: string;
+}
+
 interface Profile {
   name: string;
   handle: string;
@@ -29,17 +42,41 @@ interface Profile {
   socials: SocialLink[];
   funFacts: string[];
   stash?: string[];
+  currentRole?: CurrentRole;
 }
 
+const DEFAULT_ROLE: CurrentRole = {
+  enabled: false,
+  title: "",
+  company: "",
+  monogram: "",
+  logoUrl: "",
+  url: "",
+  location: "",
+  startedAt: "",
+  tenure: "",
+  accent: "#00ff88",
+};
+
 export function ProfileClient({ initialProfile }: { initialProfile: Profile }) {
-  const [form, setForm] = useState<Profile>(initialProfile);
+  const [form, setForm] = useState<Profile>({
+    ...initialProfile,
+    currentRole: initialProfile.currentRole ?? DEFAULT_ROLE,
+  });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
-  const { errors, validate, clearErrors } = useFormValidation(profileSchema);
+  const { errors, validate } = useFormValidation(profileSchema);
 
   function field(key: keyof Profile, value: unknown) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function roleField<K extends keyof CurrentRole>(key: K, value: CurrentRole[K]) {
+    setForm((prev) => ({
+      ...prev,
+      currentRole: { ...(prev.currentRole ?? DEFAULT_ROLE), [key]: value },
+    }));
   }
 
   function updateSocial(index: number, key: keyof SocialLink, value: string) {
@@ -77,10 +114,17 @@ export function ProfileClient({ initialProfile }: { initialProfile: Profile }) {
     }
   }
 
-  const inputClass = "w-full bg-terminal-bg border border-terminal-border rounded-lg px-3 py-2 font-mono text-xs text-text-primary placeholder-text-faint focus:outline-none focus:border-git-blue/50 focus:ring-1 focus:ring-git-blue/20 transition-colors";
+  const inputClass =
+    "w-full bg-terminal-bg border border-terminal-border rounded-lg px-3 py-2 font-mono text-xs text-text-primary placeholder-text-faint focus:outline-none focus:border-git-blue/50 focus:ring-1 focus:ring-git-blue/20 transition-colors";
+
+  const role = form.currentRole ?? DEFAULT_ROLE;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 font-mono">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-6 font-mono"
+    >
       <div>
         <div className="text-text-faint text-xs mb-1">$ git config --global user.profile</div>
         <h1 className="text-xl font-bold text-text-primary">Profile</h1>
@@ -110,6 +154,116 @@ export function ProfileClient({ initialProfile }: { initialProfile: Profile }) {
             <FormInput label="current status" value={form.currentStatus} onChange={(e) => field("currentStatus", e.target.value)} error={errors.currentStatus} required placeholder="Open to internships" />
           </div>
           <FormCheckbox label="available for work" checked={form.availableForWork} onChange={(v) => field("availableForWork", v)} />
+        </div>
+
+        {/* Currently working at */}
+        <div className="rounded-xl border border-terminal-border bg-terminal-surface p-5 space-y-4">
+          <div className="text-text-faint text-xs border-b border-terminal-border pb-2">
+            ## Currently Working At <span className="text-text-faint">— LinkedIn-style strip on About</span>
+          </div>
+          <FormCheckbox
+            label="show on profile"
+            checked={role.enabled}
+            onChange={(v) => roleField("enabled", v)}
+          />
+          {role.enabled && (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                <FormInput
+                  label="role title"
+                  value={role.title}
+                  onChange={(e) => roleField("title", e.target.value)}
+                  placeholder="Full-Stack Developer Intern"
+                />
+                <FormInput
+                  label="company"
+                  value={role.company}
+                  onChange={(e) => roleField("company", e.target.value)}
+                  placeholder="NonStop io Technologies"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <FormInput
+                  label="monogram (1-2 chars)"
+                  value={role.monogram ?? ""}
+                  onChange={(e) => roleField("monogram", e.target.value)}
+                  placeholder="N"
+                  maxLength={3}
+                />
+                <FormInput
+                  label="logo url (optional)"
+                  value={role.logoUrl ?? ""}
+                  onChange={(e) => roleField("logoUrl", e.target.value)}
+                  placeholder="https://..."
+                />
+                <FormInput
+                  label="company url"
+                  value={role.url ?? ""}
+                  onChange={(e) => roleField("url", e.target.value)}
+                  placeholder="https://nonstopio.com"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <FormInput
+                  label="started at"
+                  value={role.startedAt}
+                  onChange={(e) => roleField("startedAt", e.target.value)}
+                  placeholder="Mar 2024"
+                />
+                <FormInput
+                  label="tenure"
+                  value={role.tenure ?? ""}
+                  onChange={(e) => roleField("tenure", e.target.value)}
+                  placeholder="8 mos"
+                />
+                <FormInput
+                  label="location"
+                  value={role.location ?? ""}
+                  onChange={(e) => roleField("location", e.target.value)}
+                  placeholder="Pune, India · Hybrid"
+                />
+              </div>
+              <FormInput
+                label="accent (hex)"
+                value={role.accent ?? ""}
+                onChange={(e) => roleField("accent", e.target.value)}
+                placeholder="#00ff88"
+              />
+              {/* Live preview */}
+              <div className="pt-2">
+                <div className="text-[10px] text-text-faint mb-2">preview:</div>
+                <div
+                  className="flex items-center gap-3 p-3 rounded-lg bg-terminal-bg/60"
+                  style={{ border: `1px solid ${role.accent || "rgb(var(--color-terminal-border))"}` }}
+                >
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center font-mono font-bold text-lg overflow-hidden"
+                    style={{
+                      background: `linear-gradient(135deg, ${role.accent ?? "#00ff88"}33, ${role.accent ?? "#00ff88"}0d)`,
+                      border: `1px solid ${role.accent ?? "#00ff88"}66`,
+                      color: role.accent ?? "#00ff88",
+                    }}
+                  >
+                    {role.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={role.logoUrl} alt={role.company} className="w-full h-full object-cover" />
+                    ) : (
+                      role.monogram || role.company.charAt(0).toUpperCase() || "?"
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-text-primary font-semibold truncate">{role.title || "(role)"}</div>
+                    <div className="text-[11px]" style={{ color: role.accent ?? "#00ff88" }}>
+                      {role.company || "(company)"}
+                    </div>
+                    <div className="text-[10px] text-text-muted">
+                      {role.startedAt || "(started)"} {role.tenure ? `· ${role.tenure}` : ""}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Socials */}

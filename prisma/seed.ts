@@ -275,6 +275,16 @@ const profile = {
     "🎵  Codes to lo-fi beats and post-rock",
     "🌱  Contributing to open source, one PR at a time",
   ],
+  currentRoleEnabled: true,
+  currentRoleTitle: "Full-Stack Developer Intern",
+  currentRoleCompany: "NonStop io Technologies",
+  currentRoleMonogram: "N",
+  currentRoleLogoUrl: null as string | null,
+  currentRoleUrl: "https://nonstopio.com",
+  currentRoleLocation: "Pune, India · Hybrid",
+  currentRoleStarted: "Mar 2024",
+  currentRoleTenure: "8 mos",
+  currentRoleAccent: "#00ff88",
 };
 
 // ─── Seed ─────────────────────────────────────────────────────────────────────

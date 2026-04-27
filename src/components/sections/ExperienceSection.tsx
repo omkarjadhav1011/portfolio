@@ -1,27 +1,18 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
-import { Briefcase, GraduationCap, Trophy, Folder } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Clock } from "lucide-react";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
-import { Badge } from "@/components/ui/Badge";
-import type { CommitEntry } from "@/types";
-import { formatDateRange } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import type { CommitEntry, EntryType } from "@/types";
 
-const TYPE_ICON_MAP: Record<string, React.ElementType> = {
-  job: Briefcase,
-  education: GraduationCap,
-  achievement: Trophy,
-  project: Folder,
+const KIND_MAP: Record<EntryType, { label: string; glyph: string }> = {
+  job: { label: "Work", glyph: "⌬" },
+  education: { label: "Education", glyph: "✦" },
+  achievement: { label: "Milestone", glyph: "◆" },
+  project: { label: "Project", glyph: "✦" },
 };
 
-const COLOR_CLASSES: Record<string, { text: string; border: string; bg: string }> = {
-  green:  { text: "text-git-green",  border: "border-git-green/40",  bg: "bg-git-green/10"  },
-  blue:   { text: "text-git-blue",   border: "border-git-blue/40",   bg: "bg-git-blue/10"   },
-  yellow: { text: "text-git-yellow", border: "border-git-yellow/40", bg: "bg-git-yellow/10" },
-  orange: { text: "text-git-orange", border: "border-git-orange/40", bg: "bg-git-orange/10" },
-};
+const ROW_MIN_HEIGHT = 240;
 
 const MONTHS: Record<string, number> = {
   Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
@@ -41,145 +32,191 @@ export function ExperienceSection({ timeline }: ExperienceSectionProps) {
   const sorted = [...timeline].sort(
     (a, b) => parseDateToMs(b.date) - parseDateToMs(a.date)
   );
+  const [active, setActive] = useState(0);
+  const refs = useRef<Array<HTMLDivElement | null>>([]);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            const idx = parseInt(
+              (e.target as HTMLElement).dataset.idx ?? "0",
+              10
+            );
+            setActive(idx);
+          }
+        });
+      },
+      { threshold: 0.5, rootMargin: "-40% 0px -40% 0px" }
+    );
+    refs.current.forEach((r) => r && obs.observe(r));
+    return () => obs.disconnect();
+  }, [sorted.length]);
 
   return (
     <section id="experience" className="py-16 sm:py-24 px-4 scroll-mt-14 bg-terminal-surface/30">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <ScrollReveal>
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-git-green font-mono text-sm">$</span>
-            <span className="font-mono text-text-muted text-sm">
-              git log --graph --all --pretty=format:&quot;%h %s&quot;
-            </span>
+          <div className="flex items-center gap-3 mb-3 font-mono text-sm text-text-muted">
+            <span className="text-git-green">$</span>
+            <span>git log --graph --oneline --all</span>
           </div>
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold font-mono text-text-primary mb-2">
-            Experience & Education
+          <h2 className="font-mono font-bold text-3xl sm:text-4xl md:text-5xl mb-2 text-text-primary">
+            Experience
           </h2>
-          <p className="text-text-muted text-sm font-mono mb-12">
-            # commit history of my professional journey
+          <p className="text-text-muted text-sm font-sans mb-8">
+            walk the commit history
           </p>
         </ScrollReveal>
 
-        {/* Timeline */}
         <div className="relative">
-          {sorted.map((entry, i) => (
-            <CommitEntry key={entry.hash} entry={entry} index={i} isLast={i === sorted.length - 1} />
-          ))}
+          <div className="grid grid-cols-[56px_1fr] gap-4 md:gap-8">
+            {/* Timeline rail */}
+            <div className="relative">
+              <div
+                className="absolute left-1/2 top-4 bottom-4 w-px -translate-x-1/2"
+                style={{ background: "rgb(var(--color-terminal-border))" }}
+              />
+              <div
+                className="absolute left-1/2 top-4 w-px -translate-x-1/2 transition-all duration-500"
+                style={{
+                  height: `${((active + 1) / sorted.length) * 100}%`,
+                  background: "rgb(var(--color-git-green))",
+                  boxShadow: "0 0 8px rgb(var(--color-git-green) / 0.5)",
+                }}
+              />
+              {sorted.map((c, i) => (
+                <div
+                  key={c.hash}
+                  className="relative flex items-center justify-center"
+                  style={{
+                    height: `calc(100% / ${sorted.length})`,
+                    minHeight: ROW_MIN_HEIGHT,
+                  }}
+                >
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full transition-all duration-300 flex items-center justify-center"
+                    style={{
+                      background:
+                        i <= active ? c.branchColor : "rgb(var(--color-terminal-surface))",
+                      border: `2px solid ${c.branchColor}`,
+                      boxShadow:
+                        i === active
+                          ? `0 0 0 5px ${c.branchColor}40, 0 0 20px ${c.branchColor}80`
+                          : "none",
+                      transform:
+                        i === active
+                          ? "translateY(-50%) scale(1.25)"
+                          : "translateY(-50%) scale(1)",
+                    }}
+                  >
+                    {i === active && (
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ background: "rgb(var(--color-terminal-bg))" }}
+                      />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Cards */}
+            <div>
+              {sorted.map((c, i) => {
+                const kind = KIND_MAP[c.type] ?? KIND_MAP.project;
+                const isActive = i === active;
+                return (
+                  <div
+                    key={c.hash}
+                    ref={(el) => {
+                      refs.current[i] = el;
+                    }}
+                    data-idx={i}
+                    style={{ minHeight: ROW_MIN_HEIGHT }}
+                    className="flex items-center"
+                  >
+                    <ScrollReveal className="w-full">
+                      <div
+                        className="rounded-xl p-5 transition-all duration-500 bg-terminal-surface"
+                        style={{
+                          border: `1px solid ${
+                            isActive ? `${c.branchColor}8c` : "rgb(var(--color-terminal-border))"
+                          }`,
+                          boxShadow: isActive
+                            ? `0 0 40px ${c.branchColor}1f`
+                            : "none",
+                        }}
+                      >
+                        <div className="flex items-start gap-3 mb-3">
+                          <div
+                            className="shrink-0 w-10 h-10 rounded-lg flex items-center justify-center font-mono text-base"
+                            style={{
+                              background: `${c.branchColor}1f`,
+                              border: `1px solid ${c.branchColor}4d`,
+                              color: c.branchColor,
+                            }}
+                          >
+                            {kind.glyph}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                              <span
+                                className="px-1.5 py-0.5 rounded font-mono text-[10px] font-semibold uppercase tracking-wider"
+                                style={{
+                                  background: `${c.branchColor}26`,
+                                  color: c.branchColor,
+                                }}
+                              >
+                                {kind.label}
+                              </span>
+                              <span className="font-mono text-[10px] text-text-faint">
+                                {c.hash}
+                              </span>
+                            </div>
+                            <h3 className="font-semibold text-base leading-snug text-text-primary font-sans">
+                              {c.title}
+                            </h3>
+                            <div className="text-xs mt-0.5 text-text-muted font-sans">
+                              <span className="text-git-blue">@ {c.org}</span>
+                            </div>
+                          </div>
+                          <div
+                            className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-mono text-[10px] bg-terminal-bg/60 border border-terminal-border text-text-muted"
+                          >
+                            <Clock
+                              size={10}
+                              style={{ color: c.branchColor, opacity: 0.85 }}
+                            />
+                            {c.date}
+                            {c.dateEnd && ` — ${c.dateEnd}`}
+                          </div>
+                        </div>
+
+                        <ul className="space-y-1.5" style={{ paddingLeft: 52 }}>
+                          {c.description.map((line, j) => (
+                            <li
+                              key={j}
+                              className="flex gap-2 text-[13px] leading-relaxed text-text-secondary font-sans"
+                            >
+                              <span
+                                className="shrink-0 mt-1.5 w-1 h-1 rounded-full"
+                                style={{ background: c.branchColor }}
+                              />
+                              <span>{line}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </ScrollReveal>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </section>
-  );
-}
-
-function CommitEntry({
-  entry,
-  index,
-  isLast,
-}: {
-  entry: CommitEntry;
-  index: number;
-  isLast: boolean;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-60px" });
-  const colors = COLOR_CLASSES[entry.colorKey ?? "green"];
-
-  return (
-    <div ref={ref} className="relative flex gap-0">
-      {/* Left: graph rail */}
-      <div className="flex flex-col items-center mr-3 sm:mr-4 w-6 sm:w-8 shrink-0">
-        {/* Vertical line above */}
-        {index > 0 && (
-          <motion.div
-            className="w-px"
-            style={{ backgroundColor: entry.branchColor, height: 24, opacity: 0.4 }}
-            initial={{ scaleY: 0, originY: 0 }}
-            animate={inView ? { scaleY: 1 } : {}}
-            transition={{ duration: 0.3, delay: index * 0.08 }}
-          />
-        )}
-
-        {/* Commit dot */}
-        <motion.div
-          className="relative z-10 w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0"
-          style={{
-            borderColor: entry.branchColor,
-            backgroundColor: `${entry.branchColor}25`,
-          }}
-          initial={{ scale: 0 }}
-          animate={inView ? { scale: 1 } : {}}
-          transition={{ duration: 0.3, delay: index * 0.08 + 0.1, type: "spring" }}
-        >
-          <span
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: entry.branchColor }}
-          />
-        </motion.div>
-
-        {/* Vertical line below */}
-        {!isLast && (
-          <motion.div
-            className="w-px flex-1 mt-0"
-            style={{ backgroundColor: entry.branchColor, opacity: 0.3 }}
-            initial={{ scaleY: 0, originY: 0 }}
-            animate={inView ? { scaleY: 1 } : {}}
-            transition={{ duration: 0.5, delay: index * 0.08 + 0.2 }}
-          />
-        )}
-      </div>
-
-      {/* Right: commit content */}
-      <motion.div
-        className="flex-1 pb-10"
-        initial={{ opacity: 0, x: -16 }}
-        animate={inView ? { opacity: 1, x: 0 } : {}}
-        transition={{ duration: 0.4, delay: index * 0.08 + 0.15 }}
-      >
-        {/* Commit header */}
-        <div className="flex flex-wrap items-center gap-2 mb-2 font-mono text-xs text-text-faint">
-          <span className={colors.text}>{entry.hash}</span>
-          <span className={cn("px-1.5 py-0.5 rounded border text-[10px]", colors.text, colors.border, colors.bg)}>
-            {entry.branch}
-          </span>
-          <span>{formatDateRange(entry.date, entry.dateEnd)}</span>
-        </div>
-
-        {/* Commit card */}
-        <div className="rounded-xl border border-terminal-border bg-terminal-surface p-4 sm:p-5 hover:border-git-blue/30 hover:shadow-card-hover transition-all duration-200">
-          <div className="flex items-start gap-3 mb-3">
-            {(() => { const Icon = TYPE_ICON_MAP[entry.type] ?? Folder; return <Icon size={18} className={cn("shrink-0 mt-0.5", colors.text)} />; })()}
-            <div>
-              <h3 className="font-mono font-bold text-text-primary text-base">
-                {entry.title}
-              </h3>
-              <p className={cn("text-sm font-mono", colors.text)}>
-                @ {entry.org}
-              </p>
-            </div>
-          </div>
-
-          {/* Commit body — bullet points */}
-          <ul className="space-y-1.5 mb-4 font-mono">
-            {entry.description.map((line, li) => (
-              <li key={li} className="flex gap-2 text-xs sm:text-sm text-text-secondary">
-                <span className="text-text-faint shrink-0">│</span>
-                <span>{line}</span>
-              </li>
-            ))}
-          </ul>
-
-          {/* Tags */}
-          {entry.tags && (
-            <div className="flex flex-wrap gap-1.5">
-              {entry.tags.map((tag) => (
-                <Badge key={tag} variant="tag">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-      </motion.div>
-    </div>
   );
 }

@@ -53,6 +53,23 @@ export const skillDiffSchema = z.object({
   note: z.string().optional(),
 });
 
+export const currentRoleSchema = z.object({
+  enabled: z.boolean().default(false),
+  title: z.string().default(""),
+  company: z.string().default(""),
+  monogram: z.string().max(3).optional().or(z.literal("")),
+  logoUrl: z.string().url().optional().or(z.literal("")),
+  url: z.string().url().optional().or(z.literal("")),
+  location: z.string().optional().or(z.literal("")),
+  startedAt: z.string().default(""),
+  tenure: z.string().optional().or(z.literal("")),
+  accent: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Must be a hex color like #00ff88")
+    .optional()
+    .or(z.literal("")),
+});
+
 export const profileSchema = z.object({
   name: z.string().min(1),
   handle: z.string().min(1),
@@ -66,4 +83,5 @@ export const profileSchema = z.object({
   socials: z.array(z.object({ label: z.string(), url: z.string().url(), icon: z.string() })),
   funFacts: z.array(z.string()),
   stash: z.array(z.string()).optional(),
+  currentRole: currentRoleSchema.optional(),
 });
