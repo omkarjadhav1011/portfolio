@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { isAuthenticated } from "@/lib/auth";
 import { profileSchema } from "@/lib/admin-validations";
 
+export const dynamic = "force-dynamic";
+
 function shape(profile: Profile) {
   return {
     ...profile,
