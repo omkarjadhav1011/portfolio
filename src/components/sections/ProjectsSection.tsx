@@ -6,10 +6,8 @@ import {
   ExternalLink,
   Folder,
   GitFork,
-  GitMerge,
   SearchX,
   Star,
-  CheckCircle2,
 } from "lucide-react";
 import { ScrollReveal } from "@/components/ui/ScrollReveal";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -19,11 +17,11 @@ type Filter = "all" | "active" | "wip" | "archived";
 
 const STATUS_STYLES: Record<
   Project["status"],
-  { label: string; tint: string; glyph: string }
+  { label: string; tintVar: string; glyph: string }
 > = {
-  active: { label: "Open", tint: "var(--color-git-green)", glyph: "●" },
-  wip: { label: "WIP", tint: "var(--color-git-orange)", glyph: "◐" },
-  archived: { label: "Archived", tint: "var(--color-text-muted)", glyph: "◌" },
+  active: { label: "Open", tintVar: "--color-git-green", glyph: "●" },
+  wip: { label: "WIP", tintVar: "--color-git-orange", glyph: "◐" },
+  archived: { label: "Archived", tintVar: "--color-text-muted", glyph: "◌" },
 };
 
 interface PRCardProps {
@@ -34,24 +32,10 @@ interface PRCardProps {
 
 function PRCard({ project, index, handle }: PRCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const [shortlisting, setShortlisting] = useState(false);
-  const [shortlisted, setShortlisted] = useState(false);
 
   const status = STATUS_STYLES[project.status];
 
-  function handleShortlist(e: React.MouseEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (shortlisting || shortlisted) return;
-    setShortlisting(true);
-    setTimeout(() => {
-      setShortlisting(false);
-      setShortlisted(true);
-    }, 1200);
-  }
-
-  // Synthesize a tiny diff preview from the lastCommitMsg + first 3 tags
-  const previewLines: { type: "context" | "add" | "del"; text: string }[] = [
+  const previewLines: { type: "context" | "add"; text: string }[] = [
     { type: "context", text: `// ${project.repoName}` },
     { type: "add", text: `+ ${project.lastCommitMsg}` },
     ...project.tags.slice(0, 2).map(
@@ -62,43 +46,22 @@ function PRCard({ project, index, handle }: PRCardProps) {
   return (
     <ScrollReveal delay={index * 0.06}>
       <div
-        className="group rounded-xl overflow-hidden transition-transform hover:-translate-y-0.5 bg-terminal-surface"
-        style={{
-          border: shortlisted
-            ? "1px solid rgb(var(--color-git-purple) / 0.5)"
-            : "1px solid rgb(var(--color-terminal-border))",
-          boxShadow: shortlisted
-            ? "0 0 0 1px rgb(var(--color-git-purple) / 0.3), 0 0 40px rgb(var(--color-git-purple) / 0.1)"
-            : undefined,
-        }}
+        className="group rounded-xl overflow-hidden transition-transform hover:-translate-y-0.5 bg-terminal-surface border border-terminal-border"
       >
         {/* Status strip */}
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-terminal-border bg-terminal-bg/50 font-mono text-[11px]">
           <div className="flex items-center gap-2">
-            {shortlisted ? (
-              <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold"
-                style={{
-                  background: "rgb(var(--color-git-purple) / 0.15)",
-                  color: "rgb(var(--color-git-purple))",
-                  border: "1px solid rgb(var(--color-git-purple) / 0.4)",
-                }}
-              >
-                <GitMerge size={10} /> Merged
-              </span>
-            ) : (
-              <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold"
-                style={{
-                  background: `rgb(${status.tint} / 0.12)`,
-                  color: `rgb(${status.tint})`,
-                  border: `1px solid rgb(${status.tint} / 0.4)`,
-                }}
-              >
-                <span style={{ fontSize: 9 }}>{status.glyph}</span> {status.label}
-              </span>
-            )}
-            <span className="text-text-faint">#{index + 12}</span>
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold"
+              style={{
+                background: `rgb(var(${status.tintVar}) / 0.12)`,
+                color: `rgb(var(${status.tintVar}))`,
+                border: `1px solid rgb(var(${status.tintVar}) / 0.4)`,
+              }}
+            >
+              <span style={{ fontSize: 9 }}>{status.glyph}</span> {status.label}
+            </span>
+            <span className="text-text-faint">#{index + 1}</span>
           </div>
           <div className="flex items-center gap-3 text-text-muted">
             <span className="inline-flex items-center gap-1">
@@ -177,11 +140,6 @@ function PRCard({ project, index, handle }: PRCardProps) {
                     c: "rgb(var(--color-git-green))",
                     g: "+",
                   },
-                  del: {
-                    bg: "rgb(var(--color-git-red) / 0.08)",
-                    c: "rgb(var(--color-git-red))",
-                    g: "−",
-                  },
                   context: {
                     bg: "transparent",
                     c: "rgb(var(--color-text-muted))",
@@ -213,44 +171,15 @@ function PRCard({ project, index, handle }: PRCardProps) {
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-2 pt-3 border-t border-terminal-border">
+          <div className="pt-3 border-t border-terminal-border">
             <a
               href={project.repoUrl || `https://github.com/${handle}/${project.slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg font-mono text-xs font-semibold transition-colors bg-terminal-bg/70 border border-terminal-border text-text-primary hover:border-git-blue/50"
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg font-mono text-xs font-semibold transition-colors bg-terminal-bg/70 border border-terminal-border text-text-primary hover:border-git-blue/50"
             >
               <ExternalLink size={11} /> View Source
             </a>
-            <button
-              type="button"
-              onClick={handleShortlist}
-              disabled={shortlisted || shortlisting}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg font-mono text-xs font-semibold transition-colors disabled:cursor-default"
-              style={{
-                background: shortlisted
-                  ? "rgb(var(--color-git-purple) / 0.2)"
-                  : "rgb(var(--color-git-green) / 0.15)",
-                border: shortlisted
-                  ? "1px solid rgb(var(--color-git-purple) / 0.5)"
-                  : "1px solid rgb(var(--color-git-green) / 0.5)",
-                color: shortlisted
-                  ? "rgb(var(--color-git-purple))"
-                  : "rgb(var(--color-git-green))",
-              }}
-            >
-              {shortlisted ? (
-                <>
-                  <CheckCircle2 size={12} /> Shortlisted
-                </>
-              ) : shortlisting ? (
-                <>Merging…</>
-              ) : (
-                <>
-                  <GitMerge size={12} /> Shortlist
-                </>
-              )}
-            </button>
           </div>
         </div>
       </div>
@@ -271,23 +200,16 @@ export function ProjectsSection({ projects, githubUrl }: ProjectsSectionProps) {
     return m?.[1] ?? "you";
   })();
 
+  const counts = projects.reduce<Record<string, number>>((acc, p) => {
+    acc[p.status] = (acc[p.status] ?? 0) + 1;
+    return acc;
+  }, {});
+
   const filters: { k: Filter; label: string; count: number }[] = [
     { k: "all", label: "All", count: projects.length },
-    {
-      k: "active",
-      label: "Open",
-      count: projects.filter((p) => p.status === "active").length,
-    },
-    {
-      k: "wip",
-      label: "WIP",
-      count: projects.filter((p) => p.status === "wip").length,
-    },
-    {
-      k: "archived",
-      label: "Archived",
-      count: projects.filter((p) => p.status === "archived").length,
-    },
+    { k: "active", label: "Open", count: counts.active ?? 0 },
+    { k: "wip", label: "WIP", count: counts.wip ?? 0 },
+    { k: "archived", label: "Archived", count: counts.archived ?? 0 },
   ];
 
   const filtered = filter === "all" ? projects : projects.filter((p) => p.status === filter);
@@ -304,7 +226,7 @@ export function ProjectsSection({ projects, githubUrl }: ProjectsSectionProps) {
             Projects
           </h2>
           <p className="text-text-muted text-sm font-sans mb-6">
-            each project as a pull request — review, peek the diff, shortlist your favorites
+            each project as a pull request — review the changes and peek the diff
           </p>
         </ScrollReveal>
 

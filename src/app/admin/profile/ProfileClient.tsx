@@ -7,27 +7,10 @@ import { LoadingButton } from "@/components/ui/LoadingButton";
 import { useToast } from "@/components/admin/ToastProvider";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { profileSchema } from "@/lib/admin-validations";
+import { DEFAULT_ROLE, DEFAULT_ACCENT } from "@/lib/defaults";
+import type { CurrentRole, SocialLink } from "@/types";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-
-interface SocialLink {
-  label: string;
-  url: string;
-  icon: string;
-}
-
-interface CurrentRole {
-  enabled: boolean;
-  title: string;
-  company: string;
-  monogram?: string;
-  logoUrl?: string;
-  url?: string;
-  location?: string;
-  startedAt: string;
-  tenure?: string;
-  accent?: string;
-}
 
 interface Profile {
   name: string;
@@ -44,19 +27,6 @@ interface Profile {
   stash?: string[];
   currentRole?: CurrentRole;
 }
-
-const DEFAULT_ROLE: CurrentRole = {
-  enabled: false,
-  title: "",
-  company: "",
-  monogram: "",
-  logoUrl: "",
-  url: "",
-  location: "",
-  startedAt: "",
-  tenure: "",
-  accent: "#00ff88",
-};
 
 export function ProfileClient({ initialProfile }: { initialProfile: Profile }) {
   const [form, setForm] = useState<Profile>({
@@ -227,7 +197,7 @@ export function ProfileClient({ initialProfile }: { initialProfile: Profile }) {
                 label="accent (hex)"
                 value={role.accent ?? ""}
                 onChange={(e) => roleField("accent", e.target.value)}
-                placeholder="#00ff88"
+                placeholder={DEFAULT_ACCENT}
               />
               {/* Live preview */}
               <div className="pt-2">
@@ -239,9 +209,9 @@ export function ProfileClient({ initialProfile }: { initialProfile: Profile }) {
                   <div
                     className="w-12 h-12 rounded-lg flex items-center justify-center font-mono font-bold text-lg overflow-hidden"
                     style={{
-                      background: `linear-gradient(135deg, ${role.accent ?? "#00ff88"}33, ${role.accent ?? "#00ff88"}0d)`,
-                      border: `1px solid ${role.accent ?? "#00ff88"}66`,
-                      color: role.accent ?? "#00ff88",
+                      background: `linear-gradient(135deg, ${role.accent ?? DEFAULT_ACCENT}33, ${role.accent ?? DEFAULT_ACCENT}0d)`,
+                      border: `1px solid ${role.accent ?? DEFAULT_ACCENT}66`,
+                      color: role.accent ?? DEFAULT_ACCENT,
                     }}
                   >
                     {role.logoUrl ? (
@@ -253,7 +223,7 @@ export function ProfileClient({ initialProfile }: { initialProfile: Profile }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-xs text-text-primary font-semibold truncate">{role.title || "(role)"}</div>
-                    <div className="text-[11px]" style={{ color: role.accent ?? "#00ff88" }}>
+                    <div className="text-[11px]" style={{ color: role.accent ?? DEFAULT_ACCENT }}>
                       {role.company || "(company)"}
                     </div>
                     <div className="text-[10px] text-text-muted">
