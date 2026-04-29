@@ -3,22 +3,49 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import {
+  Menu,
+  X,
+  Folder,
+  ChevronDown,
+  ChevronRight,
+  User,
+  Code2,
+  GitCommit,
+  GitBranch,
+  Terminal,
+  LogOut,
+  Upload,
+  type LucideIcon,
+} from "lucide-react";
 import { useToast } from "./ToastProvider";
 
-const NAV_ITEMS = [
-  { label: "dashboard", path: "/admin", icon: "$" },
-  { label: "projects", path: "/admin/projects", icon: "⑂" },
-  { label: "experience", path: "/admin/experience", icon: "◉" },
-  { label: "skills", path: "/admin/skills", icon: "▲" },
-  { label: "profile", path: "/admin/profile", icon: "☰" },
+type FileEntry = {
+  id: string;
+  label: string;
+  path: string;
+  icon: LucideIcon;
+  colorClass: string;
+};
+
+const FILES: FileEntry[] = [
+  { id: "status",     label: "git-status",      path: "/admin",            icon: Terminal,  colorClass: "text-git-green" },
+  { id: "profile",    label: "profile.json",    path: "/admin/profile",    icon: User,      colorClass: "text-git-green" },
+  { id: "projects",   label: "projects.json",   path: "/admin/projects",   icon: Code2,     colorClass: "text-git-purple" },
+  { id: "experience", label: "experience.json", path: "/admin/experience", icon: GitCommit, colorClass: "text-git-orange" },
+  { id: "skills",     label: "skills.json",     path: "/admin/skills",     icon: GitBranch, colorClass: "text-git-yellow" },
 ];
 
+function isActive(pathname: string, path: string) {
+  return path === "/admin" ? pathname === "/admin" : pathname.startsWith(path);
+}
+
 export function AdminSidebar() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "/admin";
   const router = useRouter();
   const { toast } = useToast();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [folderOpen, setFolderOpen] = useState(true);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -28,56 +55,81 @@ export function AdminSidebar() {
 
   const navContent = (
     <>
-      {/* Header */}
-      <div className="px-4 py-5 border-b border-terminal-border flex items-center justify-between">
-        <div>
-          <div className="font-mono text-xs text-text-muted mb-0.5">$ git checkout</div>
-          <div className="font-mono font-bold text-text-primary text-sm">admin/panel</div>
-        </div>
+      {/* Explorer header */}
+      <div className="px-3 py-3 border-b border-terminal-border flex items-center justify-between font-mono text-[10px] uppercase tracking-widest text-text-faint">
+        <span>Explorer</span>
         <button
           onClick={() => setMobileOpen(false)}
           className="md:hidden text-text-muted hover:text-text-primary transition-colors"
           aria-label="Close menu"
         >
-          <X size={18} />
+          <X size={14} />
         </button>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 p-2 space-y-0.5">
-        {NAV_ITEMS.map((item) => {
-          const isActive = item.path === "/admin"
-            ? pathname === "/admin"
-            : pathname.startsWith(item.path);
+      {/* Workspace folder */}
+      <button
+        onClick={() => setFolderOpen((v) => !v)}
+        className="w-full flex items-center gap-1.5 px-3 py-2 font-mono text-xs text-text-secondary hover:brightness-125 transition-all"
+      >
+        {folderOpen ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+        <Folder size={12} className="text-git-blue" />
+        <span className="font-semibold">portfolio-data</span>
+        <span className="ml-auto text-[10px] text-text-faint">{FILES.length}</span>
+      </button>
 
-          return (
-            <Link
-              key={item.path}
-              href={item.path}
-              onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg font-mono text-xs transition-all duration-150 ${
-                isActive
-                  ? "bg-git-green/10 text-git-green border border-git-green/20"
-                  : "text-text-muted hover:text-text-secondary hover:bg-terminal-border/20 border border-transparent"
-              }`}
-            >
-              <span className={isActive ? "text-git-green" : "text-text-faint"}>{item.icon}</span>
-              git checkout {item.label}
-            </Link>
-          );
-        })}
-      </nav>
+      {/* File list */}
+      {folderOpen && (
+        <nav className="pl-2 flex-1">
+          {FILES.map((f) => {
+            const active = isActive(pathname, f.path);
+            const Icon = f.icon;
+            return (
+              <Link
+                key={f.id}
+                href={f.path}
+                onClick={() => setMobileOpen(false)}
+                className="w-full flex items-center gap-2 pl-5 pr-3 py-1.5 font-mono text-[12px] transition-all"
+                style={{
+                  background: active ? "rgb(var(--color-git-green) / 0.08)" : "transparent",
+                  borderLeft: active
+                    ? "2px solid rgb(var(--color-git-green))"
+                    : "2px solid transparent",
+                  color: active
+                    ? "rgb(var(--color-git-green))"
+                    : "rgb(var(--color-text-secondary))",
+                }}
+              >
+                <Icon size={11} className={active ? "text-git-green" : f.colorClass} />
+                <span className="truncate">{f.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
 
-      {/* Footer */}
-      <div className="p-3 border-t border-terminal-border">
+      {/* Quick actions footer */}
+      <div className="mt-auto border-t border-terminal-border px-3 py-3">
+        <div className="font-mono text-[10px] uppercase tracking-widest mb-2 text-text-faint">
+          Quick actions
+        </div>
+        <Link
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded font-mono text-[11px] text-text-muted hover:text-text-primary hover:brightness-125 transition-all"
+        >
+          <Upload size={11} className="text-git-green" />
+          View live site
+        </Link>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg font-mono text-xs text-git-red/70 hover:text-git-red hover:bg-git-red/5 border border-transparent hover:border-git-red/20 transition-all duration-150"
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded font-mono text-[11px] text-git-red/80 hover:text-git-red hover:bg-git-red/5 transition-all"
         >
-          <span>⏻</span>
+          <LogOut size={11} />
           git logout
         </button>
-        <div className="mt-2 px-3 font-mono text-[10px] text-text-faint">
+        <div className="mt-2 px-1 font-mono text-[10px] text-text-faint">
           HEAD → admin/panel
         </div>
       </div>
@@ -105,7 +157,7 @@ export function AdminSidebar() {
 
       {/* Mobile drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-terminal-surface border-r border-terminal-border flex flex-col transform transition-transform duration-200 md:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-terminal-window border-r border-terminal-border flex flex-col transform transition-transform duration-200 md:hidden ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -113,7 +165,7 @@ export function AdminSidebar() {
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-56 shrink-0 border-r border-terminal-border bg-terminal-surface min-h-screen flex-col">
+      <aside className="hidden md:flex w-60 shrink-0 border-r border-terminal-border bg-terminal-window flex-col overflow-y-auto">
         {navContent}
       </aside>
     </>

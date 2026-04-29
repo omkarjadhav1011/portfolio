@@ -98,5 +98,6 @@ model Profile {
   socials          String   // JSON: SocialLink[]
   funFacts         String   // JSON: string[]
   stash            String?  // JSON: string[]
+  currentRole      String?  // JSON: CurrentRole
   updatedAt        DateTime @updatedAt
 }

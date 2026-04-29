@@ -1,7 +1,6 @@
 import dynamic from "next/dynamic";
 import { HeroSection } from "@/components/sections/HeroSection";
 import { AboutSection } from "@/components/sections/AboutSection";
-import { ContributionHeatmap } from "@/components/ui/ContributionHeatmap";
 import {
   ProjectsSkeleton,
   SkillsSkeleton,
@@ -59,12 +58,40 @@ async function getPageData() {
     }));
 
     const profile: Profile = rawProfile
-      ? {
-          ...rawProfile,
-          socials: JSON.parse(rawProfile.socials),
-          funFacts: JSON.parse(rawProfile.funFacts),
-          stash: rawProfile.stash ? JSON.parse(rawProfile.stash) : undefined,
-        }
+      ? (() => {
+          const r = rawProfile as typeof rawProfile & {
+            currentRoleEnabled?: boolean | null;
+            currentRoleTitle?: string | null;
+            currentRoleCompany?: string | null;
+            currentRoleMonogram?: string | null;
+            currentRoleLogoUrl?: string | null;
+            currentRoleUrl?: string | null;
+            currentRoleLocation?: string | null;
+            currentRoleStarted?: string | null;
+            currentRoleTenure?: string | null;
+            currentRoleAccent?: string | null;
+          };
+          return {
+            ...r,
+            socials: JSON.parse(r.socials),
+            funFacts: JSON.parse(r.funFacts),
+            stash: r.stash ? JSON.parse(r.stash) : undefined,
+            currentRole: r.currentRoleEnabled
+              ? {
+                  enabled: true,
+                  title: r.currentRoleTitle ?? "",
+                  company: r.currentRoleCompany ?? "",
+                  monogram: r.currentRoleMonogram ?? undefined,
+                  logoUrl: r.currentRoleLogoUrl ?? undefined,
+                  url: r.currentRoleUrl ?? undefined,
+                  location: r.currentRoleLocation ?? undefined,
+                  startedAt: r.currentRoleStarted ?? "",
+                  tenure: r.currentRoleTenure ?? undefined,
+                  accent: r.currentRoleAccent ?? undefined,
+                }
+              : undefined,
+          };
+        })()
       : staticProfile;
 
     const skillBranches: SkillBranch[] = rawBranches.map((b) => ({
@@ -132,7 +159,6 @@ export default async function Home() {
   return (
     <>
       <HeroSection profile={profile} />
-      <ContributionHeatmap />
       <AboutSection profile={profile} topSkills={topSkills} />
       <SkillsSection skillBranches={skillBranches} />
       <SkillsDiffSection skillsDiff={skillsDiff} />
