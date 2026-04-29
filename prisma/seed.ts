@@ -275,6 +275,18 @@ const profile = {
     "🎵  Codes to lo-fi beats and post-rock",
     "🌱  Contributing to open source, one PR at a time",
   ],
+  currentRole: {
+    enabled: true,
+    title: "Full-Stack Developer Intern",
+    company: "NonStop io Technologies",
+    monogram: "N",
+    logoUrl: "",
+    url: "https://nonstopio.com",
+    location: "Pune, India · Hybrid",
+    startedAt: "Mar 2024",
+    tenure: "8 mos",
+    accent: "#00ff88",
+  },
 };
 
 // ─── Seed ─────────────────────────────────────────────────────────────────────
@@ -291,12 +303,14 @@ async function main() {
       socials: JSON.stringify(profile.socials),
       funFacts: JSON.stringify(profile.funFacts),
       stash: JSON.stringify(profile.stash),
+      currentRole: JSON.stringify(profile.currentRole),
     },
     update: {
       ...profile,
       socials: JSON.stringify(profile.socials),
       funFacts: JSON.stringify(profile.funFacts),
       stash: JSON.stringify(profile.stash),
+      currentRole: JSON.stringify(profile.currentRole),
     },
   });
   console.log("✓ Profile seeded");

@@ -19,6 +19,7 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@google/generative-ai": "^0.24.1",
     "@libsql/client": "^0.8.0",
     "@prisma/adapter-libsql": "^5.22.0",
     "@prisma/client": "^5.22.0",
@@ -40,7 +41,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "@types/node": "^20.14.12",
+    "@types/node": "~20.14.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.19",
@@ -50,6 +51,6 @@
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.7",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
+    "typescript": "~5.5.4"
   }
 }

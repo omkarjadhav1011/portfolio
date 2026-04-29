@@ -63,6 +63,19 @@ export interface SocialLink {
   icon: string;
 }
 
+export interface CurrentRole {
+  enabled: boolean;
+  title: string;
+  company: string;
+  monogram?: string;
+  logoUrl?: string;
+  url?: string;
+  location?: string;
+  startedAt: string;
+  tenure?: string;
+  accent?: string; // hex color
+}
+
 export interface Profile {
   name: string;
   handle: string;
@@ -76,6 +89,7 @@ export interface Profile {
   socials: SocialLink[];
   funFacts: string[];
   stash?: string[];
+  currentRole?: CurrentRole;
 }
 
 // ─── Skills Diff ─────────────────────────────────────────────────────────────
