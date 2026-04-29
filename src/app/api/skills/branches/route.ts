@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { isAuthenticated } from "@/lib/auth";
 import { skillBranchSchema } from "@/lib/admin-validations";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const branches = await prisma.skillBranch.findMany({

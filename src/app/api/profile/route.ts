@@ -14,6 +14,7 @@ function shape(profile: Profile) {
     currentRole: profile.currentRole ? JSON.parse(profile.currentRole) : null,
   };
 }
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
